@@ -615,7 +615,7 @@ export function ScheduleEditor({
                   : "border-line-strong text-ink-2 hover:bg-paper-2",
               )}
             >
-              {paint ? "회색 지정 중 — 드래그하세요" : "회색 지정"}
+              {paint ? "비활성 지정 중 — 드래그하세요" : "비활성 지정"}
             </button>
           )}
           {!readOnly && (
@@ -922,7 +922,7 @@ function CellEditor({
                   mode === m ? "bg-ink text-paper" : "text-ink-2",
                 )}
               >
-                {m === "pairing" ? "학생(교사)" : "비수업"}
+                {m === "pairing" ? "학생(교사)" : "비활성"}
               </button>
             ))}
           </div>
@@ -952,15 +952,12 @@ function CellEditor({
           </div>
         ) : (
           <div className="mt-3 space-y-2">
-            <p className="text-[11px] leading-snug text-ink-3">
-              수업 없는 시간대(비수업)입니다. 메모는 선택 사항이며, 기본 배경은 사선입니다.
-            </p>
             <textarea
               autoFocus
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={3}
-              placeholder="비수업 메모 (선택) — 예) 6:20-8 성대k 김"
+              placeholder="비활성 메모 (선택) — 예) 6:20-8 성대k 김"
               className="w-full resize-y rounded-md border border-line-strong bg-paper px-2.5 py-1.5 text-[13px] outline-none focus:border-clay"
             />
             <div className="flex flex-wrap items-center gap-1.5">

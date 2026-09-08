@@ -48,7 +48,7 @@ export async function PUT(req: Request) {
   const admin = await isAdmin();
   if (!admin) {
     if (list.some((c) => c.kind === "block")) {
-      return NextResponse.json({ error: "비수업 칸은 관리자만 수정할 수 있습니다." }, { status: 403 });
+      return NextResponse.json({ error: "비활성 칸은 관리자만 수정할 수 있습니다." }, { status: 403 });
     }
     const { data: existing } = await sb
       .from("schedule_cells")
@@ -60,7 +60,7 @@ export async function PUT(req: Request) {
         .map((r) => `${r.date}|${r.room}|${r.slot_index}`),
     );
     if (list.some((c) => blockKeys.has(`${c.date}|${c.room}|${c.slot_index}`))) {
-      return NextResponse.json({ error: "비수업 칸은 관리자만 수정할 수 있습니다." }, { status: 403 });
+      return NextResponse.json({ error: "비활성 칸은 관리자만 수정할 수 있습니다." }, { status: 403 });
     }
   }
 

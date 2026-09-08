@@ -10,7 +10,6 @@ import {
   roomsForDate,
   slotHours,
   slotsForDate,
-  weekRangeLabel,
   type Week,
 } from "@/lib/schedule";
 import { durationH } from "@/lib/time";
@@ -84,14 +83,9 @@ export function MonthCalendar({
           >
             <Link
               href={`/week/${w.key}`}
-              className="flex flex-col justify-center gap-0.5 border-r px-3 py-2.5 transition-colors hover:bg-paper-2"
+              className="flex items-center border-r px-3 py-2.5 text-[12px] font-semibold text-ink transition-colors hover:bg-paper-2"
             >
-              <span className="text-[12px] font-semibold text-ink">
-                {w.index}주
-              </span>
-              <span className="text-[10.5px] tabular-nums text-ink-3">
-                {weekRangeLabel(w)}
-              </span>
+              {w.index}주
             </Link>
 
             {w.days.map((d) => {
