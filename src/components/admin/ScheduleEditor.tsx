@@ -520,6 +520,25 @@ export function ScheduleEditor({
     return () => window.removeEventListener("keydown", onKey);
   }, [readOnly]);
 
+  // ← / → move to the previous / next week (only where the ‹ › week nav shows)
+  useEffect(() => {
+    if (initialWeekKey != null || dayOnly) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) || t.isContentEditable)
+      )
+        return;
+      e.preventDefault();
+      setWeekKey(iso(addDays(week.start, e.key === "ArrowLeft" ? -7 : 7)));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [initialWeekKey, dayOnly, weekKey, week.start]);
+
   // flush any pending structural save when navigating to another week / unmounting
   useEffect(() => {
     const timers = structTimers.current;

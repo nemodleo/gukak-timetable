@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getMonthData, getSettings } from "@/lib/data";
 import { iso, isInMonth, monthLabel, weeksOfMonth } from "@/lib/schedule";
 import { MonthCalendar } from "@/components/MonthCalendar";
@@ -82,11 +81,7 @@ export default async function HomePage({
 
       {!anyCells && (
         <p className="text-[13px] text-ink-3">
-          아직 배정된 시간표가 없습니다.{" "}
-          <Link className="text-clay underline" href="/admin">
-            관리자
-          </Link>
-          에서 엑셀 데이터를 가져오세요.
+          아직 배정된 시간표가 없습니다. 관리자에게 문의하세요.
         </p>
       )}
     </div>

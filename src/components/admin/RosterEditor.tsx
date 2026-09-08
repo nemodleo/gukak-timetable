@@ -77,6 +77,24 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
     };
   }, [ym]);
 
+  // ← / → move to the previous / next month
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) || t.isContentEditable)
+      )
+        return;
+      e.preventDefault();
+      setYm((v) => shiftYm(v, e.key === "ArrowLeft" ? -1 : 1));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   async function doSave(rs: Row[], y: string) {
     if (savingRef.current) {
       queuedRef.current = { rows: rs, ym: y };
