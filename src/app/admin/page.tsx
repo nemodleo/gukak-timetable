@@ -1,19 +1,20 @@
 import { getRole } from "@/lib/auth";
 import { getMonthData, getPairingsForRange, getSettings } from "@/lib/data";
+import { PageHeader } from "@/components/ui";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { AdminGate } from "@/components/admin/AdminGate";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const role = await getRole();
+  const [role, settings] = await Promise.all([getRole(), getSettings()]);
   const configured = Boolean(
     process.env.ADMIN_PASSWORD || process.env.INSTRUCTOR_PASSWORD,
   );
 
   return (
     <div className="space-y-6">
-      <h1 className="font-serif text-[26px] font-medium tracking-tight">관리자</h1>
+      <PageHeader eyebrow={`${settings.school_name} · 관리자`} title="관리자" />
       {role === "admin" ? (
         <Tabs />
       ) : (

@@ -54,7 +54,7 @@ export function MonthCalendar({
       <div className="min-w-[560px]">
       <div
         className="grid border-b bg-paper-2 text-[11px] font-semibold text-ink-3"
-        style={{ gridTemplateColumns: `104px repeat(7, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: "repeat(8, minmax(0, 1fr))" }}
       >
         <div className="px-3 py-2">주</div>
         {order.map((g) => (
@@ -79,7 +79,7 @@ export function MonthCalendar({
               "grid border-b last:border-b-0",
               active && "bg-[var(--color-current-week)]",
             )}
-            style={{ gridTemplateColumns: `104px repeat(7, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: "repeat(8, minmax(0, 1fr))" }}
           >
             <Link
               href={`/week/${w.key}`}

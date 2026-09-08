@@ -39,17 +39,16 @@ export default async function DayPage({
     <div className="space-y-6">
       <ArrowKeyNav prev={`/day/${prev}`} next={`/day/${next}`} />
       <PageHeader
-        eyebrow={
-          <>
-            {settings.school_name} ·{" "}
-            <Link href={`/week/${weekKey}`} className="hover:underline">
-              주간 보기
-            </Link>
-          </>
-        }
+        eyebrow={`${settings.school_name} · 일간 시간표`}
         title={fmtDayHeader(d)}
         actions={
           <>
+            <Link
+              href={`/week/${weekKey}`}
+              className="rounded-full border border-line-strong px-3 py-1.5 text-[12px] text-ink-2 transition-colors hover:bg-paper-2"
+            >
+              주간 보기
+            </Link>
             <Legend className="mr-1 hidden sm:flex" />
             <StepNav prev={`/day/${prev}`} next={`/day/${next}`} />
           </>

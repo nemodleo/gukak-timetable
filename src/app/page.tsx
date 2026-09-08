@@ -3,9 +3,7 @@ import { iso, isInMonth, monthLabel, weeksOfMonth } from "@/lib/schedule";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { MonthCapture } from "@/components/MonthCapture";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
-import { PageHeader, SectionTitle, StepNav } from "@/components/ui";
-import { ConfigNotice } from "@/components/ConfigNotice";
-import { hasSupabase } from "@/lib/supabaseServer";
+import { PageHeader, StepNav } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -35,16 +33,15 @@ export default async function HomePage({
 
   const prev = shiftMonth(y, m, -1);
   const next = shiftMonth(y, m, 1);
+  const prevHref = `/?y=${prev.y}&m=${prev.m}`;
+  const nextHref = `/?y=${next.y}&m=${next.m}`;
 
   return (
-    <div className="space-y-7">
-      <ArrowKeyNav
-        prev={`/?y=${prev.y}&m=${prev.m}`}
-        next={`/?y=${next.y}&m=${next.m}`}
-      />
+    <div className="space-y-6">
+      <ArrowKeyNav prev={prevHref} next={nextHref} />
       <PageHeader
-        eyebrow={data.settings.school_name}
-        title={`${monthLabel(y, m)} 시간표`}
+        eyebrow={`${data.settings.school_name} · 월간 시간표`}
+        title={monthLabel(y, m)}
         actions={
           <>
             <MonthCapture
@@ -56,28 +53,19 @@ export default async function HomePage({
               memos={data.memos}
               dayConfigs={data.dayConfigs}
             />
-            <StepNav
-              prev={`/?y=${prev.y}&m=${prev.m}`}
-              next={`/?y=${next.y}&m=${next.m}`}
-              label={`${y}. ${String(m).padStart(2, "0")}`}
-            />
+            <StepNav prev={prevHref} next={nextHref} />
           </>
         }
       />
 
-      {!hasSupabase() && <ConfigNotice />}
-
-      <section>
-        <SectionTitle>월간 달력</SectionTitle>
-        <MonthCalendar
-          weeks={weeks}
-          year={y}
-          month={m}
-          cells={data.cells}
-          settings={data.settings}
-          dayConfigs={data.dayConfigs}
-        />
-      </section>
+      <MonthCalendar
+        weeks={weeks}
+        year={y}
+        month={m}
+        cells={data.cells}
+        settings={data.settings}
+        dayConfigs={data.dayConfigs}
+      />
 
       {!anyCells && (
         <p className="text-[13px] text-ink-3">
