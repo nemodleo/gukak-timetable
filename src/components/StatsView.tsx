@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import clsx from "clsx";
 import type { Cell, DayConfig, Pairing, Settings } from "@/lib/types";
 import { DOW_KO, dowOrder } from "@/lib/stats";
-import { actualVsTarget, totals, weekdayMatrix } from "@/lib/stats";
-import { indexDayConfigs, parseIso } from "@/lib/schedule";
+import { actualVsTarget, weekdayMatrix } from "@/lib/stats";
+import { indexDayConfigs } from "@/lib/schedule";
 import { badgeBg, gradeKey } from "@/lib/colors";
 import { SectionTitle } from "./ui";
 
@@ -59,50 +59,18 @@ export function StatsView({
   weeks: WeekLite[];
 }) {
   const cfgMap = useMemo(() => indexDayConfigs(dayConfigs), [dayConfigs]);
-  const [weekKey, setWeekKey] = useState<string>("all");
-  const [dow, setDow] = useState<string>("all");
-  const [grade, setGrade] = useState<string>("all");
-  const [teacher, setTeacher] = useState<string>("all");
 
-  const allDates = useMemo(() => weeks.flatMap((w) => w.days), [weeks]);
-  const teachers = useMemo(
-    () => [...new Set(pairings.map((p) => p.teacher_name).filter(Boolean))].sort(),
-    [pairings],
+  const scopeSet = useMemo(
+    () => new Set(weeks.flatMap((w) => w.days)),
+    [weeks],
   );
-
-  const scopeDates = useMemo(() => {
-    let ds = weekKey === "all" ? allDates : (weeks.find((w) => w.key === weekKey)?.days ?? []);
-    if (dow !== "all") {
-      const g = Number(dow);
-      ds = ds.filter((d) => parseIso(d).getDay() === g);
-    }
-    return ds;
-  }, [weekKey, dow, weeks, allDates]);
-  const scopeSet = useMemo(() => new Set(scopeDates), [scopeDates]);
-
-  const filteredPairings = useMemo(
-    () =>
-      pairings.filter((p) => {
-        if (grade !== "all" && gradeKey(p.grade, p.label) !== grade) return false;
-        if (teacher !== "all" && p.teacher_name !== teacher) return false;
-        return true;
-      }),
-    [pairings, grade, teacher],
-  );
-  const fpIds = useMemo(() => new Set(filteredPairings.map((p) => p.id)), [filteredPairings]);
   const scopedCells = useMemo(
-    () =>
-      cells.filter(
-        (c) =>
-          scopeSet.has(c.date) &&
-          (c.kind !== "pairing" || !c.pairing_id || fpIds.has(c.pairing_id)),
-      ),
-    [cells, scopeSet, fpIds],
+    () => cells.filter((c) => scopeSet.has(c.date)),
+    [cells, scopeSet],
   );
 
-  const t = totals(filteredPairings, scopedCells, settings, scopeDates, cfgMap);
   const avt = actualVsTarget(
-    filteredPairings,
+    pairings,
     scopedCells,
     settings,
     scopeSet,
@@ -117,59 +85,18 @@ export function StatsView({
     );
   });
   const matrix = weekdayMatrix(
-    filteredPairings,
+    pairings,
     scopedCells,
     settings,
     settings.week_start,
     scopeSet,
     cfgMap,
-  ).filter((r) => r.total > 0 || weekKey === "all");
+  );
 
   const orderG = dowOrder(settings.week_start);
 
-  const selCls =
-    "rounded-md border border-line-strong bg-paper px-2.5 py-1.5 text-[12.5px] text-ink-2";
-
   return (
     <div className="space-y-8">
-      {/* filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        <select className={selCls} value={weekKey} onChange={(e) => setWeekKey(e.target.value)}>
-          <option value="all">전체 월</option>
-          {weeks.map((w) => (
-            <option key={w.key} value={w.key}>
-              {w.index}주 ({w.label})
-            </option>
-          ))}
-        </select>
-        <select className={selCls} value={dow} onChange={(e) => setDow(e.target.value)}>
-          <option value="all">모든 요일</option>
-          {orderG.map((g) => (
-            <option key={g} value={g}>
-              {DOW_KO[g]}요일
-            </option>
-          ))}
-        </select>
-        <select className={selCls} value={grade} onChange={(e) => setGrade(e.target.value)}>
-          <option value="all">전체 학년</option>
-          <option value="g1">1학년</option>
-          <option value="g2">2학년</option>
-          <option value="g3">3학년</option>
-          <option value="gm">보강·합반</option>
-        </select>
-        <select className={selCls} value={teacher} onChange={(e) => setTeacher(e.target.value)}>
-          <option value="all">전체 교사</option>
-          {teachers.map((tn) => (
-            <option key={tn} value={tn}>
-              {tn}
-            </option>
-          ))}
-        </select>
-        <span className="text-[11px] text-ink-3">
-          {scopeDates.length}일 · {t.pairingCells + t.textCells}칸
-        </span>
-      </div>
-
       {/* actual vs target */}
       <section>
         <SectionTitle>수업 차이</SectionTitle>
