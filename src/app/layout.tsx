@@ -26,8 +26,6 @@ export default async function RootLayout({
       <body className="min-h-screen overflow-x-hidden">
         <SiteHeader
           schoolName={settings?.school_name ?? "국립국악고등학교"}
-          year={settings?.year ?? 2026}
-          month={settings?.month ?? 7}
           role={role}
         />
         <main className="mx-auto max-w-[1400px] px-4 pb-24 pt-8 sm:px-8">

@@ -13,13 +13,9 @@ const NAV = [
 
 export function SiteHeader({
   schoolName,
-  year,
-  month,
   role,
 }: {
   schoolName: string;
-  year: number;
-  month: number;
   role: "admin" | "instructor" | null;
 }) {
   const pathname = usePathname();
@@ -39,9 +35,6 @@ export function SiteHeader({
         </Link>
 
         <nav className="flex min-w-0 items-center gap-0.5 sm:gap-1">
-          <span className="mr-2 hidden text-xs tabular-nums text-ink-3 sm:inline">
-            {year}. {String(month).padStart(2, "0")}
-          </span>
           {NAV.filter((n) => !n.auth || role).map((n) => {
             const active =
               n.href === "/" ? pathname === "/" : pathname.startsWith(n.href);

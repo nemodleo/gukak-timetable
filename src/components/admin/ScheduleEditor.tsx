@@ -628,14 +628,6 @@ export function ScheduleEditor({
         </div>
       </div>
 
-      {!readOnly && (
-        <p className="text-[11px] leading-snug text-ink-3">
-          {isAdmin
-            ? "칸 클릭 = 배정/비수업 편집(비수업은 메모·색 지정 가능) · 머리글의 강의실·블록은 클릭해 수정, 호버 시 ✕ 삭제, 끝 + 추가 · 모든 변경은 자동 저장됩니다."
-            : "칸을 클릭해 학생(교사) 배정을 지정합니다. 비수업 칸과 강의실·시간블록 구조는 관리자만 수정합니다. 모든 변경은 자동 저장됩니다."}
-        </p>
-      )}
-
       <div className="overflow-x-auto scroll-thin pb-8">
         <div
           className={clsx(
