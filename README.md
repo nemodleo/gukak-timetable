@@ -1,3 +1,5 @@
+<img src="docs/icon.png" alt="" width="72" align="right" />
+
 # Gukak Timetable
 
 **A web app that replaces the monthly Excel workbook used to schedule instructors and rehearsal rooms at the National Gugak High School (국립국악고등학교).**

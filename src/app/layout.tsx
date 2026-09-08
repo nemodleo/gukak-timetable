@@ -5,7 +5,7 @@ import { getSettings } from "@/lib/data";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "시간표 · 강사·강의실 배정",
+  title: "국악고 시간표",
   description: "국립국악고등학교 강사·강의실 시간표 및 통계",
 };
 
