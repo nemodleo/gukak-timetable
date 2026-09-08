@@ -45,10 +45,11 @@ export default async function HomePage({
   // 목표시수와 차이 나는(초과·미달) 배정 전부 — |차이| 큰 순
   const mismatched = avt
     .filter((a) => a.status === "over" || a.status === "under")
+    // 초과(+) 내림차순 → 미달(−) 내림차순
     .sort(
       (a, b) =>
-        Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0) ||
-        (b.diff ?? -99) - (a.diff ?? -99),
+        (a.status === "over" ? 0 : 1) - (b.status === "over" ? 0 : 1) ||
+        Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0),
     );
 
   const prev = shiftMonth(y, m, -1);

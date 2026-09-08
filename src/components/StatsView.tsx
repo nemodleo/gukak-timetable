@@ -107,11 +107,15 @@ export function StatsView({
     settings,
     scopeSet,
     cfgMap,
-  ).sort(
-    (a, b) =>
-      Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0) ||
-      (b.diff ?? -99) - (a.diff ?? -99),
-  );
+  ).sort((a, b) => {
+    // 초과(+) 내림차순 → 미달(−) 내림차순 → 일치(0) → 목표없음
+    const rank = (s: string) =>
+      s === "over" ? 0 : s === "under" ? 1 : s === "exact" ? 2 : 3;
+    return (
+      rank(a.status) - rank(b.status) ||
+      Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0)
+    );
+  });
   const matrix = weekdayMatrix(
     filteredPairings,
     scopedCells,
