@@ -2,11 +2,13 @@ import seed from "@/data/seed-2026.json";
 import {
   DEFAULT_SETTINGS,
   type Cell,
+  type DayConfig,
   type DayMemo,
   type Pairing,
   type Settings,
   type SeedPayload,
 } from "./types";
+import { normalizeSlots } from "./normalize";
 import { ymOf, ymsInRange } from "./schedule";
 
 /** Read-only fallback dataset used when Supabase is not configured, so the app
@@ -53,6 +55,16 @@ export const demoCells: Cell[] = s.cells
 
 export const demoMemos: DayMemo[] = s.memos ?? [];
 
+export const demoDayConfigs: DayConfig[] = (s.day_configs ?? []).map((dc) => ({
+  date: dc.date,
+  rooms:
+    Array.isArray(dc.rooms) && dc.rooms.length ? (dc.rooms as string[]) : null,
+  slots:
+    Array.isArray(dc.slots) && dc.slots.length
+      ? normalizeSlots(dc.slots, 360)
+      : null,
+}));
+
 export function demoPairingsFor(ym: string): Pairing[] {
   return demoPairings.filter((p) => p.ym === ym);
 }
@@ -66,4 +78,7 @@ export function demoCellsBetween(from: string, to: string): Cell[] {
 }
 export function demoMemosBetween(from: string, to: string): DayMemo[] {
   return demoMemos.filter((m) => m.date >= from && m.date <= to);
+}
+export function demoDayConfigsBetween(from: string, to: string): DayConfig[] {
+  return demoDayConfigs.filter((c) => c.date >= from && c.date <= to);
 }

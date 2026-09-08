@@ -12,6 +12,7 @@ import { iso, weeksOfMonth, ymKey, ymsInRange } from "./schedule";
 import { normalizeMemo, normalizeSlots } from "./normalize";
 import {
   demoCellsBetween,
+  demoDayConfigsBetween,
   demoMemosBetween,
   demoPairings,
   demoPairingsFor,
@@ -125,7 +126,7 @@ export async function getDayConfigs(
   to: string,
 ): Promise<DayConfig[]> {
   const sb = supabaseServer();
-  if (!sb) return [];
+  if (!sb) return demoDayConfigsBetween(from, to);
   const { data } = await sb
     .from("day_configs")
     .select("*")

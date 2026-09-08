@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "../_guard";
-import { getAllPairings, getCells, getMemos, getSettings } from "@/lib/data";
+import {
+  getAllPairings,
+  getCells,
+  getDayConfigs,
+  getMemos,
+  getSettings,
+} from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +16,11 @@ export async function GET() {
   if (unauth) return unauth;
 
   const settings = await getSettings();
-  const [pairings, cells, memos] = await Promise.all([
+  const [pairings, cells, memos, dayConfigs] = await Promise.all([
     getAllPairings(),
     getCells("1900-01-01", "2999-12-31"),
     getMemos("1900-01-01", "2999-12-31"),
+    getDayConfigs("1900-01-01", "2999-12-31"),
   ]);
 
   const byId = new Map(pairings.map((p) => [p.id, p.label]));
@@ -33,6 +40,7 @@ export async function GET() {
       color: c.color ?? null,
     })),
     memos,
+    day_configs: dayConfigs,
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

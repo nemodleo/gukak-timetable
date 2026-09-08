@@ -80,6 +80,7 @@ export interface SeedPayload {
     color?: CellColor | null;
   }>;
   memos: DayMemo[];
+  day_configs?: DayConfig[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {

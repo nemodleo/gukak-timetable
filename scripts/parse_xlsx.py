@@ -47,8 +47,51 @@ OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "src" / "data" / "seed-
 ROOMS = ["I", "II", "III", "大", "中", "우"]
 DAY_BLOCK_START = ["M", "X", "AI", "AT", "BE", "BP", "CA"]
 DAY_MEMO_COL = ["S", "AD", "AO", "AZ", "BK", "BV", "CG"]
+DAY_TIME_COL = ["L", "W", "AH", "AS", "BD", "BO", "BZ"]
 DAY_HEADER_CELL = ["K3", "V3", "AG3", "AR3", "BC3", "BN3", "BY3"]
 SLOT_ROWS = [8, 14, 20, 26, 32, 38, 44, 50, 56]
+
+# "6:00AM ~ 8:00AM" style label -> ("06:00", "08:00").  Tolerates the odd
+# malformed cell ("17::30AM ~ 19:30AM", "19:30PM ~ 21:30AM"): a double colon
+# is collapsed and, when the hour is already 24-hour (>12), the AM/PM suffix
+# is ignored.  Returns None when it can't produce a sane 0.5–4h band.
+_TIME_RE = re.compile(
+    r"(\d{1,2})\s*:{1,2}\s*(\d{2})\s*([AaPp][Mm])?\s*~\s*"
+    r"(\d{1,2})\s*:{1,2}\s*(\d{2})\s*([AaPp][Mm])?"
+)
+
+
+def _to24(h: int, m: int, ap: str | None) -> int:
+    if h <= 12 and ap:
+        ap = ap.upper()
+        if ap == "AM" and h == 12:
+            h = 0
+        elif ap == "PM" and h != 12:
+            h += 12
+    return h * 60 + m
+
+
+def _hm(s: str) -> int:
+    h, m = s.split(":")
+    return int(h) * 60 + int(m)
+
+
+def _mh(t: int) -> str:
+    return f"{t // 60:02d}:{t % 60:02d}"
+
+
+def parse_time_label(s):
+    m = _TIME_RE.search(str(s or "").replace("\n", " "))
+    if not m:
+        return None
+    start = _to24(int(m.group(1)), int(m.group(2)), m.group(3))
+    end = _to24(int(m.group(4)), int(m.group(5)), m.group(6))
+    if not (0 <= start < 24 * 60 and 0 < end <= 24 * 60):
+        return None
+    dur = end - start
+    if dur < 30 or dur > 4 * 60:
+        return None
+    return (f"{start // 60:02d}:{start % 60:02d}", f"{end // 60:02d}:{end % 60:02d}")
 
 def _blocks(spec):
     return [{"start": s, "end": e} for s, e in spec]
@@ -182,6 +225,7 @@ def main():
     # per calendar day, keep the richest version seen across sheets in its own file
     day_cells: dict[str, list[dict]] = {}
     day_memos: dict[str, list[str]] = {}
+    day_slots: dict[str, list[dict]] = {}
     day_score: dict[str, int] = {}
 
     for path in files:
@@ -221,6 +265,13 @@ def main():
                 is_weekend = d.weekday() >= 5
                 n_slots = len(WEEKEND_SLOTS) if is_weekend else len(WEEKDAY_SLOTS)
 
+                tcol = ci(DAY_TIME_COL[di])
+                default_slots = WEEKEND_SLOTS if is_weekend else WEEKDAY_SLOTS
+                slot_times = [
+                    parse_time_label(ws.cell(SLOT_ROWS[si], tcol).value)
+                    for si in range(n_slots)
+                ]
+
                 cells, score = [], 0
                 for si in range(n_slots):
                     row = SLOT_ROWS[si]
@@ -234,6 +285,30 @@ def main():
                         elif is_gray(c):
                             # non-teaching band marked by a gray fill
                             cells.append({"date": iso, "room": room, "slot_index": si, "block": True})
+
+                # the real per-day time bands (they vary by weekday / week / month,
+                # so the hard-coded WEEKDAY/WEEKEND defaults are only a fallback).
+                # unlabeled rows that still carry a lesson are chained off the last
+                # known end and clamped to the next labeled start (no overlaps).
+                used_si = max((c["slot_index"] for c in cells), default=-1)
+                last_si = max(used_si, max((si for si, t in enumerate(slot_times) if t), default=-1))
+                slots, prev_end = [], None
+                for si in range(last_si + 1):
+                    t = slot_times[si]
+                    if t:
+                        s_min, e_min = _hm(t[0]), _hm(t[1])
+                    else:
+                        d0 = default_slots[si] if si < len(default_slots) else {"start": "06:00"}
+                        s_min = prev_end if prev_end is not None else _hm(d0["start"])
+                        nxt = next((_hm(slot_times[j][0]) for j in range(si + 1, last_si + 1)
+                                    if slot_times[j]), None)
+                        e_min = s_min + (60 if si == last_si else 120)
+                        if nxt is not None and e_min > nxt:
+                            e_min = nxt
+                        if e_min <= s_min:
+                            e_min = s_min + 30
+                    slots.append({"start": _mh(s_min), "end": _mh(e_min)})
+                    prev_end = e_min
 
                 mcol = ci(DAY_MEMO_COL[di])
                 memo_lines = []
@@ -249,6 +324,7 @@ def main():
                     day_score[iso] = score
                     day_cells[iso] = cells
                     day_memos[iso] = memo_lines
+                    day_slots[iso] = slots
 
     pairings = []
     for ym in sorted(roster_by_ym):
@@ -272,6 +348,22 @@ def main():
                 # 학생 배정이 아닌 자유 텍스트 = 비수업(메모) — 색 fill 있으면 유지
                 cells_out.append({**base, "kind": "block", "label": None,
                                   "text": v.replace("\n", " "), "color": c.get("color")})
+
+    # per-day time-band overrides: emit a day_config whenever a day's real slot
+    # times differ from the weekday/weekend defaults (they usually do).
+    default_wd = [(x["start"], x["end"]) for x in WEEKDAY_SLOTS]
+    default_we = [(x["start"], x["end"]) for x in WEEKEND_SLOTS]
+    day_configs_out = []
+    for iso in sorted(day_slots):
+        slots = day_slots[iso]
+        if not slots:
+            continue
+        wknd = datetime.date.fromisoformat(iso).weekday() >= 5
+        base = default_we if wknd else default_wd
+        got = [(s["start"], s["end"]) for s in slots]
+        if got == base[: len(got)]:
+            continue  # matches the default — no override needed
+        day_configs_out.append({"date": iso, "rooms": None, "slots": slots})
 
     memos_out = []
     for iso in sorted(day_memos):
@@ -302,6 +394,7 @@ def main():
         "pairings": pairings,
         "cells": cells_out,
         "memos": memos_out,
+        "day_configs": day_configs_out,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -320,6 +413,7 @@ def main():
           f"(pairing={sum(1 for c in cells_out if c['kind']=='pairing')}, "
           f"block={len(_blk)}  [메모있음 {sum(1 for c in _blk if c['text'])}])")
     print(f"  memo days:{len(memos_out)}")
+    print(f"  daycfgs:  {len(day_configs_out)}  (per-day time-band overrides)")
     print(f"  days:     {len(dd)}   span {dd[0]} .. {dd[-1]}")
     print(f"  months:   {', '.join(months)}")
 

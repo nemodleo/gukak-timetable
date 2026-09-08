@@ -8,7 +8,7 @@ import { PasswordInput } from "./PasswordInput";
 
 const NAV = [
   { href: "/", label: "월간" },
-  { href: "/stats", label: "통계" },
+  { href: "/stats", label: "통계", auth: true },
 ];
 
 export function SiteHeader({
@@ -42,7 +42,7 @@ export function SiteHeader({
           <span className="mr-2 hidden text-xs tabular-nums text-ink-3 sm:inline">
             {year}. {String(month).padStart(2, "0")}
           </span>
-          {NAV.map((n) => {
+          {NAV.filter((n) => !n.auth || role).map((n) => {
             const active =
               n.href === "/" ? pathname === "/" : pathname.startsWith(n.href);
             return (

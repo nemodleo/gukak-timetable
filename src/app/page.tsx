@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { getMonthData, getSettings } from "@/lib/data";
-import {
-  indexDayConfigs,
-  iso,
-  isInMonth,
-  monthLabel,
-  weeksOfMonth,
-} from "@/lib/schedule";
-import { actualVsTarget } from "@/lib/stats";
+import { iso, isInMonth, monthLabel, weeksOfMonth } from "@/lib/schedule";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { MonthCapture } from "@/components/MonthCapture";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
@@ -34,24 +27,12 @@ export default async function HomePage({
 
   const data = await getMonthData(y, m);
   const weeks = weeksOfMonth(y, m, data.settings.week_start);
-  // stats count THIS month's days only — weeks spill into neighbouring months
   const inMonthDates = weeks
     .flatMap((w) => w.days)
     .filter((d) => isInMonth(d, y, m))
     .map(iso);
   const dateSet = new Set(inMonthDates);
-  const cfgMap = indexDayConfigs(data.dayConfigs);
-  const avt = actualVsTarget(data.pairings, data.cells, data.settings, dateSet, cfgMap);
   const anyCells = data.cells.some((c) => dateSet.has(c.date));
-  // 목표시수와 차이 나는(초과·미달) 배정 전부 — |차이| 큰 순
-  const mismatched = avt
-    .filter((a) => a.status === "over" || a.status === "under")
-    // 초과(+) 내림차순 → 미달(−) 내림차순
-    .sort(
-      (a, b) =>
-        (a.status === "over" ? 0 : 1) - (b.status === "over" ? 0 : 1) ||
-        Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0),
-    );
 
   const prev = shiftMonth(y, m, -1);
   const next = shiftMonth(y, m, 1);
@@ -99,61 +80,6 @@ export default async function HomePage({
           settings={data.settings}
           dayConfigs={data.dayConfigs}
         />
-      </section>
-
-      <section>
-        <SectionTitle
-          sub={`목표시수와 차이 나는 배정 ${mismatched.length}건 · 전체 명단은 통계에서`}
-          right={
-            <Link
-              href="/stats"
-              className="text-[13px] text-clay underline-offset-4 hover:underline"
-            >
-              전체 통계 →
-            </Link>
-          }
-        >
-          수업 차이
-        </SectionTitle>
-        {mismatched.length === 0 ? (
-          <p className="rounded-lg border bg-paper px-4 py-3 text-[13px] text-ink-3">
-            {anyCells
-              ? "모든 배정이 목표시수와 일치합니다."
-              : "아직 배정이 없습니다."}
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-lg border">
-            <table className="w-full text-left text-[13px]">
-              <thead className="bg-paper-2 text-[11px] text-ink-3">
-                <tr>
-                  <th className="px-3 py-2 font-semibold">학생 (교사)</th>
-                  <th className="px-3 py-2 text-right font-semibold">실배정</th>
-                  <th className="px-3 py-2 text-right font-semibold">목표</th>
-                  <th className="px-3 py-2 text-right font-semibold">차이</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mismatched.map((a) => (
-                  <tr key={a.pairing.id} className="border-t">
-                    <td className="px-3 py-1.5">{a.pairing.label}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums">{a.actual}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-ink-3">
-                      {a.target ?? "—"}
-                    </td>
-                    <td
-                      className={
-                        "px-3 py-1.5 text-right tabular-nums font-semibold " +
-                        (a.status === "over" ? "text-over" : "text-warn")
-                      }
-                    >
-                      {a.diff != null && a.diff > 0 ? `+${a.diff}` : a.diff}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </section>
 
       {!anyCells && (

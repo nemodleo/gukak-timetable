@@ -111,5 +111,22 @@ export async function POST(req: Request) {
     report.memos = rows.length;
   }
 
+  // 5) per-day time-band overrides
+  if (payload.day_configs?.length) {
+    const rows = payload.day_configs.map((dc) => ({
+      date: dc.date,
+      rooms: dc.rooms ?? null,
+      slots: dc.slots ?? null,
+    }));
+    for (let i = 0; i < rows.length; i += 500) {
+      const { error } = await sb
+        .from("day_configs")
+        .upsert(rows.slice(i, i + 500), { onConflict: "date" });
+      if (error)
+        return NextResponse.json({ error: `day_configs: ${error.message}` }, { status: 500 });
+    }
+    report.day_configs = rows.length;
+  }
+
   return NextResponse.json({ ok: true, report });
 }
