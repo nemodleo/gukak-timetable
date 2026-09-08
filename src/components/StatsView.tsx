@@ -99,7 +99,7 @@ export function StatsView({
     <div className="space-y-8">
       {/* actual vs target */}
       <section>
-        <SectionTitle>수업 차이</SectionTitle>
+        <SectionTitle>목표 차이</SectionTitle>
         <div className="overflow-x-auto rounded-lg border scroll-thin">
           <table className="w-full min-w-[560px] text-left text-[13px]">
             <thead className="bg-paper-2 text-[11px] text-ink-3">

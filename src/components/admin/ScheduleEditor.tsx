@@ -623,10 +623,10 @@ export function ScheduleEditor({
               type="button"
               onClick={() => undo()}
               disabled={undoStack.length === 0}
-              title="되돌리기 (⌘/Ctrl+Z)"
+              title="이전 (⌘/Ctrl+Z)"
               className="rounded-full border border-line-strong px-3 py-1.5 text-[12px] text-ink-2 transition-colors hover:bg-paper-2 disabled:opacity-40"
             >
-              ↶ 되돌리기
+              ↶ 이전
             </button>
           )}
         </div>

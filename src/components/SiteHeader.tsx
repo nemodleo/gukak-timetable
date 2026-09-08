@@ -30,7 +30,7 @@ export function SiteHeader({
             시간표
           </span>
           <span className="hidden text-xs text-ink-3 sm:inline">
-            {schoolName} · 강사 · 강의실
+            {schoolName}
           </span>
         </Link>
 
@@ -148,11 +148,6 @@ function AuthControl({
             }
           }}
         >
-          <p className="mb-2 text-[11.5px] leading-snug text-ink-3">
-            {open === "admin"
-              ? "관리자 비밀번호를 입력하면 관리자 페이지로 이동합니다."
-              : "강사 비밀번호를 입력하면 시간표를 편집할 수 있습니다."}
-          </p>
           <PasswordInput
             autoFocus
             value={pw}

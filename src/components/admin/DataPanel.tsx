@@ -7,48 +7,90 @@ import { SectionTitle } from "../ui";
 export function DataPanel() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<
+    | { kind: "idle" }
+    | { kind: "busy"; name: string }
+    | { kind: "done"; text: string }
+    | { kind: "error"; text: string }
+  >({ kind: "idle" });
 
-  async function post(body?: unknown) {
-    setBusy(true);
-    setMsg(null);
-    const res = await fetch("/api/seed", {
-      method: "POST",
-      headers: body ? { "content-type": "application/json" } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    const j = await res.json().catch(() => ({}));
-    setBusy(false);
-    if (res.ok) {
-      setMsg(`완료: ${JSON.stringify(j.report ?? j)}`);
-      router.refresh();
-    } else {
-      setMsg(`오류: ${j.error ?? res.status}`);
+  async function importJson(body: unknown, name: string) {
+    setStatus({ kind: "busy", name });
+    try {
+      const res = await fetch("/api/seed", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) {
+        const r = j.report ?? {};
+        setStatus({
+          kind: "done",
+          text: `가져오기 완료 · ${["pairings", "cells", "memos", "day_configs"]
+            .filter((k) => r[k] != null)
+            .map((k) => `${k} ${r[k]}`)
+            .join(" · ")}`,
+        });
+        router.refresh();
+      } else {
+        setStatus({ kind: "error", text: `오류: ${j.error ?? res.status}` });
+      }
+    } catch {
+      setStatus({ kind: "error", text: "오류: 서버에 연결할 수 없습니다." });
     }
   }
+
+  const busy = status.kind === "busy";
 
   return (
     <div className="max-w-2xl space-y-8">
       <section>
-        <SectionTitle>시드·백업 파일 가져오기</SectionTitle>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json"
-          className="block text-[13px]"
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            try {
-              const json = JSON.parse(await f.text());
-              await post(json);
-            } catch {
-              setMsg("오류: JSON을 읽을 수 없습니다.");
-            }
-            if (fileRef.current) fileRef.current.value = "";
-          }}
-        />
+        <SectionTitle>파일 가져오기</SectionTitle>
+        <label
+          className={
+            "inline-flex cursor-pointer items-center gap-2 rounded-md bg-ink px-4 py-2 text-sm text-paper " +
+            (busy ? "pointer-events-none opacity-60" : "hover:opacity-90")
+          }
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            disabled={busy}
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (fileRef.current) fileRef.current.value = "";
+              if (!f) return;
+              let json: unknown;
+              try {
+                json = JSON.parse(await f.text());
+              } catch {
+                setStatus({ kind: "error", text: "오류: JSON을 읽을 수 없습니다." });
+                return;
+              }
+              await importJson(json, f.name);
+            }}
+          />
+          {busy ? "가져오는 중…" : "JSON 파일 선택"}
+        </label>
+
+        <div className="mt-2 min-h-[20px] text-[12.5px]">
+          {status.kind === "busy" && (
+            <span className="text-ink-2">
+              <span className="inline-block animate-pulse">●</span> {status.name}{" "}
+              가져오는 중… 수십 초 걸릴 수 있습니다. 이 화면을 벗어나지 마세요.
+            </span>
+          )}
+          {status.kind === "done" && (
+            <span className="text-ink-2">✓ {status.text}</span>
+          )}
+          {status.kind === "error" && (
+            <span className="text-over">{status.text}</span>
+          )}
+        </div>
+
         <p className="mt-1.5 text-[12px] text-ink-3">
           make seed 로 만든 src/data/seed-2026.json 또는 내보낸 백업 JSON.
         </p>
@@ -63,25 +105,6 @@ export function DataPanel() {
           백업 다운로드
         </a>
       </section>
-
-      <section>
-        <SectionTitle>샘플 데이터 (데모용)</SectionTitle>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => post()}
-          className="rounded-md border border-line-strong px-4 py-2 text-sm text-ink-2 disabled:opacity-50"
-        >
-          {busy ? "가져오는 중…" : "앱에 포함된 샘플 데이터 가져오기"}
-        </button>
-        <p className="mt-1.5 text-[12px] text-ink-3">
-          배포본에는 익명화된 샘플만 들어 있습니다. 실제 데이터는 위의 파일 가져오기를 사용하세요.
-        </p>
-      </section>
-
-      {msg && (
-        <p className="rounded border bg-paper px-3 py-2 text-[12px] text-ink-2">{msg}</p>
-      )}
     </div>
   );
 }
