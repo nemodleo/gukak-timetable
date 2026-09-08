@@ -10,6 +10,7 @@ import {
 import { actualVsTarget } from "@/lib/stats";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { MonthCapture } from "@/components/MonthCapture";
+import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { PageHeader, SectionTitle, StepNav } from "@/components/ui";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { hasSupabase } from "@/lib/supabaseServer";
@@ -57,6 +58,10 @@ export default async function HomePage({
 
   return (
     <div className="space-y-7">
+      <ArrowKeyNav
+        prev={`/?y=${prev.y}&m=${prev.m}`}
+        next={`/?y=${next.y}&m=${next.m}`}
+      />
       <PageHeader
         eyebrow={data.settings.school_name}
         title={`${monthLabel(y, m)} 시간표`}
@@ -83,7 +88,7 @@ export default async function HomePage({
       {!hasSupabase() && <ConfigNotice />}
 
       <section>
-        <SectionTitle sub="주를 클릭하면 주간 시간표, 날짜를 클릭하면 일별 시간표로 이동합니다. 막대는 포화도(강사가 입력할 수 있는 시간 대비), 숫자는 수업 개수.">
+        <SectionTitle sub="주를 클릭하면 주간 시간표, 날짜를 클릭하면 일별 시간표로 이동합니다(← → 키로 월 이동). 막대는 포화도(강사가 입력할 수 있는 시간 대비), 숫자는 수업 개수, ✕는 넣을 수 있는 시간이 없는 날.">
           월간 달력
         </SectionTitle>
         <MonthCalendar

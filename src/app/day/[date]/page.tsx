@@ -9,7 +9,7 @@ import {
 import { getRole } from "@/lib/auth";
 import { addDays, fmtDayHeader, iso, parseIso, startOfWeekKey } from "@/lib/schedule";
 import { ScheduleBoard } from "@/components/ScheduleBoard";
-import { DayKeyNav } from "@/components/DayKeyNav";
+import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { Legend, PageHeader, StepNav } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ export default async function DayPage({
 
   return (
     <div className="space-y-6">
-      <DayKeyNav prev={prev} next={next} />
+      <ArrowKeyNav prev={`/day/${prev}`} next={`/day/${next}`} />
       <PageHeader
         eyebrow={
           <>

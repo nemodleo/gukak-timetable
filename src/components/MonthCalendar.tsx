@@ -132,7 +132,14 @@ export function MonthCalendar({
                   >
                     {fmtDayShort(d)}
                   </span>
-                  {count > 0 && (
+                  {available <= 0 ? (
+                    <span
+                      className="mt-auto text-[11px] font-medium text-ink-3"
+                      title="수업을 넣을 수 있는 시간이 없습니다"
+                    >
+                      ✕
+                    </span>
+                  ) : (
                     <span className="mt-auto flex items-center gap-1">
                       <span className="h-1 w-full overflow-hidden rounded-full bg-line">
                         <span

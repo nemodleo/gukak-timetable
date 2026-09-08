@@ -9,6 +9,7 @@ import {
 import { getRole } from "@/lib/auth";
 import { addDays, iso, weekFromKey, weekRangeLabel } from "@/lib/schedule";
 import { ScheduleBoard } from "@/components/ScheduleBoard";
+import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { Legend, PageHeader, StepNav } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,7 @@ export default async function WeekPage({
 
   return (
     <div className="space-y-6">
+      <ArrowKeyNav prev={`/week/${prevKey}`} next={`/week/${nextKey}`} />
       <PageHeader
         eyebrow={`${settings.school_name} · 주간 시간표`}
         title={weekRangeLabel(week)}

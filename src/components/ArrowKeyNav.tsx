@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-/** ← / → move to the previous / next day. Ignored while typing in a field. */
-export function DayKeyNav({ prev, next }: { prev: string; next: string }) {
+/** ← / → navigate to the previous / next view. Ignored while typing in a field. */
+export function ArrowKeyNav({ prev, next }: { prev: string; next: string }) {
   const router = useRouter();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -18,8 +18,8 @@ export function DayKeyNav({ prev, next }: { prev: string; next: string }) {
           el.isContentEditable)
       )
         return;
-      if (e.key === "ArrowLeft") router.push(`/day/${prev}`);
-      else if (e.key === "ArrowRight") router.push(`/day/${next}`);
+      if (e.key === "ArrowLeft") router.push(prev);
+      else if (e.key === "ArrowRight") router.push(next);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
