@@ -83,7 +83,7 @@ export default async function HomePage({
       {!hasSupabase() && <ConfigNotice />}
 
       <section>
-        <SectionTitle sub="주를 클릭하면 주간 시간표, 날짜를 클릭하면 일별 시간표로 이동합니다. 막대는 포화도(강사가 입력할 수 있는 시간 대비), 숫자는 수업으로 채운 시간.">
+        <SectionTitle sub="주를 클릭하면 주간 시간표, 날짜를 클릭하면 일별 시간표로 이동합니다. 막대는 포화도(강사가 입력할 수 있는 시간 대비), 숫자는 수업 개수.">
           월간 달력
         </SectionTitle>
         <MonthCalendar

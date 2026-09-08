@@ -40,11 +40,13 @@ export function MonthCalendar({
   //         (관리자가 설정한 강의실·시간블록 범위 − 비수업 시간)
   const usedH = new Map<string, number>();
   const blockedH = new Map<string, number>();
+  const usedCount = new Map<string, number>();
   for (const c of cells) {
     const h = slotHours(parseIso(c.date), c.slot_index, settings, cfg.get(c.date));
-    if (c.kind === "pairing")
+    if (c.kind === "pairing") {
       usedH.set(c.date, (usedH.get(c.date) ?? 0) + h);
-    else if (c.kind === "block")
+      usedCount.set(c.date, (usedCount.get(c.date) ?? 0) + 1);
+    } else if (c.kind === "block")
       blockedH.set(c.date, (blockedH.get(c.date) ?? 0) + h);
   }
 
@@ -103,6 +105,7 @@ export function MonthCalendar({
               // 강사가 입력할 수 있는 시간 = 설정된 범위 − 비수업 시간
               const available = Math.max(0, capacity - (blockedH.get(iso(d)) ?? 0));
               const used = usedH.get(iso(d)) ?? 0;
+              const count = usedCount.get(iso(d)) ?? 0;
               const pct = available > 0 ? used / available : 0;
               return (
                 <Link
@@ -129,7 +132,7 @@ export function MonthCalendar({
                   >
                     {fmtDayShort(d)}
                   </span>
-                  {used > 0 && (
+                  {count > 0 && (
                     <span className="mt-auto flex items-center gap-1">
                       <span className="h-1 w-full overflow-hidden rounded-full bg-line">
                         <span
@@ -138,7 +141,7 @@ export function MonthCalendar({
                         />
                       </span>
                       <span className="shrink-0 text-[9px] tabular-nums text-ink-3">
-                        {used}h
+                        {count}개
                       </span>
                     </span>
                   )}
