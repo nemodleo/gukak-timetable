@@ -4,6 +4,7 @@ import { getRole } from "@/lib/auth";
 import { isInMonth, iso, weeksOfMonth } from "@/lib/schedule";
 import { PageHeader, StepNav } from "@/components/ui";
 import { StatsView } from "@/components/StatsView";
+import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,16 @@ export default async function StatsPage({
   const y = Number(sp.y) || base.year;
   const m = Number(sp.m) || base.month;
 
+  const total = y * 12 + (m - 1);
+  const prev = { y: Math.floor((total - 1) / 12), m: ((total - 1) % 12) + 1 };
+  const next = { y: Math.floor((total + 1) / 12), m: ((total + 1) % 12) + 1 };
+  const prevHref = `/stats?y=${prev.y}&m=${prev.m}`;
+  const nextHref = `/stats?y=${next.y}&m=${next.m}`;
+
   if (!role) {
     return (
       <div className="space-y-6">
+        <ArrowKeyNav prev={prevHref} next={nextHref} />
         <PageHeader eyebrow={`${base.school_name} · 통계`} title={`${y}년 ${m}월`} />
         <p className="rounded-lg border bg-paper px-4 py-3 text-[13px] text-ink-3">
           통계는 로그인한 강사·관리자만 볼 수 있습니다. 오른쪽 위에서{" "}
@@ -43,19 +51,16 @@ export default async function StatsPage({
     label: `${w.start.getMonth() + 1}.${w.start.getDate()}–${w.end.getMonth() + 1}.${w.end.getDate()}`,
   }));
 
-  const total = y * 12 + (m - 1);
-  const prev = { y: Math.floor((total - 1) / 12), m: ((total - 1) % 12) + 1 };
-  const next = { y: Math.floor((total + 1) / 12), m: ((total + 1) % 12) + 1 };
-
   return (
     <div className="space-y-7">
+      <ArrowKeyNav prev={prevHref} next={nextHref} />
       <PageHeader
         eyebrow={`${data.settings.school_name} · 통계`}
         title={`${y}년 ${m}월`}
         actions={
           <StepNav
-            prev={`/stats?y=${prev.y}&m=${prev.m}`}
-            next={`/stats?y=${next.y}&m=${next.m}`}
+            prev={prevHref}
+            next={nextHref}
             label={`${y}. ${String(m).padStart(2, "0")}`}
           />
         }
