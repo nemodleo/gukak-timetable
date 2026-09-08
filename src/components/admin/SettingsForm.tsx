@@ -88,7 +88,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <SectionTitle sub="엑셀 SET UP 시트에 해당합니다.">기본 설정</SectionTitle>
+      <SectionTitle>기본 설정</SectionTitle>
 
       <div className="grid grid-cols-2 gap-4">
         <label className="col-span-2 flex flex-col gap-1">

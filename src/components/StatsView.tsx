@@ -172,9 +172,7 @@ export function StatsView({
 
       {/* actual vs target */}
       <section>
-        <SectionTitle sub="이 달의 계획을 목표시수와 대조 · 초과 빨강 · 미달 주황 · 일치 무표시">
-          수업 차이
-        </SectionTitle>
+        <SectionTitle>수업 차이</SectionTitle>
         <div className="overflow-x-auto rounded-lg border scroll-thin">
           <table className="w-full min-w-[560px] text-left text-[13px]">
             <thead className="bg-paper-2 text-[11px] text-ink-3">
@@ -246,7 +244,7 @@ export function StatsView({
 
       {/* pairing x weekday matrix */}
       <section>
-        <SectionTitle sub="엑셀 CY9:DF20 · 페어링별 요일 배정시간">페어링 × 요일</SectionTitle>
+        <SectionTitle>페어링 × 요일</SectionTitle>
         <div className="overflow-x-auto rounded-lg border scroll-thin">
           <table className="w-full min-w-[560px] text-left text-[12.5px]">
             <thead className="bg-paper-2 text-[11px] text-ink-3">

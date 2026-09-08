@@ -31,23 +31,7 @@ export function DataPanel() {
   return (
     <div className="max-w-2xl space-y-8">
       <section>
-        <SectionTitle sub="data/ 폴더의 2026년 1~9월 엑셀에서 추출한 월별 명단·목표시수·배정·회색(비수업) 칸·메모 전체를 DB에 적재합니다. 같은 칸은 덮어씁니다.">
-          기본 데이터 가져오기
-        </SectionTitle>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => post()}
-          className="rounded-md bg-ink px-4 py-2 text-sm text-paper disabled:opacity-50"
-        >
-          {busy ? "가져오는 중…" : "2026년 전체 기본 데이터 가져오기"}
-        </button>
-      </section>
-
-      <section>
-        <SectionTitle sub="이전에 내보낸 백업(JSON)을 선택하면 그대로 복원합니다.">
-          백업 파일 가져오기
-        </SectionTitle>
+        <SectionTitle>시드·백업 파일 가져오기</SectionTitle>
         <input
           ref={fileRef}
           type="file"
@@ -65,18 +49,34 @@ export function DataPanel() {
             if (fileRef.current) fileRef.current.value = "";
           }}
         />
+        <p className="mt-1.5 text-[12px] text-ink-3">
+          make seed 로 만든 src/data/seed-2026.json 또는 내보낸 백업 JSON.
+        </p>
       </section>
 
       <section>
-        <SectionTitle sub="현재 DB의 모든 설정·명단·배정·메모를 JSON으로 저장합니다.">
-          백업 내보내기
-        </SectionTitle>
+        <SectionTitle>내보내기</SectionTitle>
         <a
           href="/api/export"
           className="inline-block rounded-md border border-line-strong px-4 py-2 text-sm text-ink-2 hover:bg-paper-2"
         >
           백업 다운로드
         </a>
+      </section>
+
+      <section>
+        <SectionTitle>샘플 데이터 (데모용)</SectionTitle>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => post()}
+          className="rounded-md border border-line-strong px-4 py-2 text-sm text-ink-2 disabled:opacity-50"
+        >
+          {busy ? "가져오는 중…" : "앱에 포함된 샘플 데이터 가져오기"}
+        </button>
+        <p className="mt-1.5 text-[12px] text-ink-3">
+          배포본에는 익명화된 샘플만 들어 있습니다. 실제 데이터는 위의 파일 가져오기를 사용하세요.
+        </p>
       </section>
 
       {msg && (

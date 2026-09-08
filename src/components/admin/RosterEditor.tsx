@@ -160,10 +160,7 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
 
   return (
     <div className="space-y-4">
-      <SectionTitle
-        sub="달마다 독립된 명단입니다. 입력란을 벗어나면 자동 저장됩니다. 라벨을 비우면 ‘학생 (교사T)’로 자동 생성됩니다."
-        right={<SaveTag state={saveState} loading={loading} />}
-      >
+      <SectionTitle right={<SaveTag state={saveState} loading={loading} />}>
         명단 · {ym}
       </SectionTitle>
 
