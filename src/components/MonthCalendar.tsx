@@ -138,7 +138,7 @@ export function MonthCalendar({
                         />
                       </span>
                       <span className="shrink-0 text-[9px] tabular-nums text-ink-3">
-                        {Math.round(pct * 100)}%
+                        {used}h
                       </span>
                     </span>
                   )}
