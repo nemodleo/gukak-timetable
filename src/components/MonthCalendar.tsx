@@ -36,7 +36,8 @@ export function MonthCalendar({
   const cfg = indexDayConfigs(dayConfigs);
   const order = dowOrder(settings.week_start);
 
-  // 시간(hours) 기준: 수업(pairing) 시간 / (전체 강의시간 − 비수업 시간)
+  // 포화도: 수업(pairing) 채운 시간 ÷ 강사가 입력할 수 있는 시간
+  //         (관리자가 설정한 강의실·시간블록 범위 − 비수업 시간)
   const usedH = new Map<string, number>();
   const blockedH = new Map<string, number>();
   for (const c of cells) {
@@ -99,6 +100,7 @@ export function MonthCalendar({
                 0,
               );
               const capacity = perDayH * roomsForDate(d, settings, dc).length;
+              // 강사가 입력할 수 있는 시간 = 설정된 범위 − 비수업 시간
               const available = Math.max(0, capacity - (blockedH.get(iso(d)) ?? 0));
               const used = usedH.get(iso(d)) ?? 0;
               const pct = available > 0 ? used / available : 0;
@@ -136,7 +138,7 @@ export function MonthCalendar({
                         />
                       </span>
                       <span className="shrink-0 text-[9px] tabular-nums text-ink-3">
-                        {used}h
+                        {Math.round(pct * 100)}%
                       </span>
                     </span>
                   )}
