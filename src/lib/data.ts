@@ -88,12 +88,25 @@ export async function getPairingsForRange(
 export async function getCells(from: string, to: string): Promise<Cell[]> {
   const sb = supabaseServer();
   if (!sb) return demoCellsBetween(from, to);
-  const { data } = await sb
-    .from("schedule_cells")
-    .select("*")
-    .gte("date", from)
-    .lte("date", to);
-  return (data ?? []) as Cell[];
+  // PostgREST caps a response at 1000 rows; a month of grid cells (blocks
+  // included) easily exceeds that, so page through with an explicit order.
+  const PAGE = 1000;
+  const out: Cell[] = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await sb
+      .from("schedule_cells")
+      .select("*")
+      .gte("date", from)
+      .lte("date", to)
+      .order("date", { ascending: true })
+      .order("room", { ascending: true })
+      .order("slot_index", { ascending: true })
+      .range(offset, offset + PAGE - 1);
+    if (error || !data || data.length === 0) break;
+    out.push(...(data as Cell[]));
+    if (data.length < PAGE) break;
+  }
+  return out;
 }
 
 export async function getMemos(from: string, to: string): Promise<DayMemo[]> {
