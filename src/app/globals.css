@@ -1,26 +1,85 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* system fonts only — no cross-origin @import, so html-to-image capture
+     never blocks fetching a remote stylesheet */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-serif: "Nanum Myeongjo", "AppleMyungjo", "Iowan Old Style", Georgia,
+    "Apple SD Gothic Neo", "Times New Roman", serif;
+
+  /* Leeum-inspired stone / clay palette (echoes the xlsx browns #d2b8aa → #816758) */
+  --color-paper: #faf8f5;
+  --color-paper-2: #f3efe9;
+  --color-line: #e6e0d8;
+  --color-line-strong: #d8cfc3;
+  --color-ink: #1c1a17;
+  --color-ink-2: #514b43;
+  --color-ink-3: #8a8177;
+  --color-clay: #8a6f5c;
+  --color-clay-soft: #b79380;
+  --color-clay-wash: #efe7df;
+
+  /* grade accents — soft washes for cells */
+  --color-g1: #f6ecc9;
+  --color-g2: #f2d6d2;
+  --color-g3: #d9e6d4;
+  --color-gm: #d3ddec;
+  /* grade accents — exact legacy hex for stat badges */
+  --color-g1-badge: #ffe599;
+  --color-g2-badge: #ea9999;
+  --color-g3-badge: #b6d7a8;
+  --color-gm-badge: #a4c2f4;
+
+  --color-over: #b3261e;
+  --color-warn: #b07d1c;
+  --color-current-week: #e9eefb;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  border-color: var(--color-line);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* small-caps style label */
+.label-eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  font-weight: 600;
+}
+
+/* thin scrollbar for the week grid */
+.scroll-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }

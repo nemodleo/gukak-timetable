@@ -1,0 +1,845 @@
+{
+  "settings": {
+    "school_name": "국립국악고등학교",
+    "year": 2026,
+    "month": 7,
+    "week_start": "mon",
+    "rooms": [
+      "I",
+      "II",
+      "III",
+      "大",
+      "中",
+      "우"
+    ],
+    "time_slots_weekday": [
+      {
+        "start": "06:00",
+        "end": "08:00"
+      },
+      {
+        "start": "08:00",
+        "end": "10:00"
+      },
+      {
+        "start": "10:00",
+        "end": "12:00"
+      },
+      {
+        "start": "12:00",
+        "end": "14:00"
+      },
+      {
+        "start": "14:00",
+        "end": "16:00"
+      },
+      {
+        "start": "16:00",
+        "end": "18:00"
+      },
+      {
+        "start": "18:00",
+        "end": "20:00"
+      },
+      {
+        "start": "20:00",
+        "end": "22:00"
+      },
+      {
+        "start": "22:00",
+        "end": "23:00"
+      }
+    ],
+    "time_slots_weekend": [
+      {
+        "start": "05:00",
+        "end": "07:00"
+      },
+      {
+        "start": "07:00",
+        "end": "09:00"
+      },
+      {
+        "start": "09:00",
+        "end": "11:00"
+      },
+      {
+        "start": "11:00",
+        "end": "13:00"
+      },
+      {
+        "start": "13:00",
+        "end": "15:00"
+      },
+      {
+        "start": "15:00",
+        "end": "17:00"
+      },
+      {
+        "start": "17:00",
+        "end": "18:00"
+      }
+    ]
+  },
+  "pairings": [
+    {
+      "ym": "2026-07",
+      "student_name": "학생01",
+      "grade": "1",
+      "teacher_name": "교사A",
+      "target_hours": 16,
+      "label": "학생01 (교사AT)",
+      "sort_order": 0
+    },
+    {
+      "ym": "2026-07",
+      "student_name": "학생02",
+      "grade": "2",
+      "teacher_name": "교사B",
+      "target_hours": 20,
+      "label": "학생02 (교사BT)",
+      "sort_order": 1
+    },
+    {
+      "ym": "2026-07",
+      "student_name": "학생03",
+      "grade": "3",
+      "teacher_name": "교사C",
+      "target_hours": 12,
+      "label": "학생03 (교사CT)",
+      "sort_order": 2
+    },
+    {
+      "ym": "2026-07",
+      "student_name": "학생04",
+      "grade": "1",
+      "teacher_name": "교사D",
+      "target_hours": 16,
+      "label": "학생04 (교사DT)",
+      "sort_order": 3
+    },
+    {
+      "ym": "2026-07",
+      "student_name": "학생05",
+      "grade": "2",
+      "teacher_name": "교사E",
+      "target_hours": 20,
+      "label": "학생05 (교사ET)",
+      "sort_order": 4
+    },
+    {
+      "ym": "2026-07",
+      "student_name": "학생06",
+      "grade": "3",
+      "teacher_name": "교사F",
+      "target_hours": 12,
+      "label": "학생06 (교사FT)",
+      "sort_order": 5
+    }
+  ],
+  "cells": [
+    {
+      "date": "2026-07-06",
+      "room": "III",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "우",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "I",
+      "slot_index": 1,
+      "kind": "pairing",
+      "label": "학생02 (교사BT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "III",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "우",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "II",
+      "slot_index": 2,
+      "kind": "pairing",
+      "label": "학생03 (교사CT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "III",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "우",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "III",
+      "slot_index": 3,
+      "kind": "pairing",
+      "label": "학생04 (교사DT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "우",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "III",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "大",
+      "slot_index": 4,
+      "kind": "pairing",
+      "label": "학생05 (교사ET)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "우",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "III",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "中",
+      "slot_index": 5,
+      "kind": "pairing",
+      "label": "학생06 (교사FT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-06",
+      "room": "우",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "III",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "우",
+      "slot_index": 0,
+      "kind": "pairing",
+      "label": "학생01 (교사AT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "III",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "우",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "I",
+      "slot_index": 2,
+      "kind": "pairing",
+      "label": "학생02 (교사BT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "III",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "우",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "II",
+      "slot_index": 3,
+      "kind": "pairing",
+      "label": "학생03 (교사CT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "III",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "우",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "III",
+      "slot_index": 4,
+      "kind": "pairing",
+      "label": "학생04 (교사DT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "우",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "III",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "大",
+      "slot_index": 5,
+      "kind": "pairing",
+      "label": "학생05 (교사ET)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-07",
+      "room": "우",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "III",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "中",
+      "slot_index": 0,
+      "kind": "pairing",
+      "label": "학생06 (교사FT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "우",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "III",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "우",
+      "slot_index": 1,
+      "kind": "pairing",
+      "label": "학생01 (교사AT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "III",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "우",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "I",
+      "slot_index": 3,
+      "kind": "pairing",
+      "label": "학생02 (교사BT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "III",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "우",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "II",
+      "slot_index": 4,
+      "kind": "pairing",
+      "label": "학생03 (교사CT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "III",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "우",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "III",
+      "slot_index": 5,
+      "kind": "pairing",
+      "label": "학생04 (교사DT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-08",
+      "room": "우",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "III",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "大",
+      "slot_index": 0,
+      "kind": "pairing",
+      "label": "학생05 (교사ET)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "우",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "III",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "中",
+      "slot_index": 1,
+      "kind": "pairing",
+      "label": "학생06 (교사FT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "우",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "III",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "우",
+      "slot_index": 2,
+      "kind": "pairing",
+      "label": "학생01 (교사AT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "III",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "우",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "I",
+      "slot_index": 4,
+      "kind": "pairing",
+      "label": "학생02 (교사BT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "III",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "우",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "II",
+      "slot_index": 5,
+      "kind": "pairing",
+      "label": "학생03 (교사CT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "III",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-09",
+      "room": "우",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "III",
+      "slot_index": 0,
+      "kind": "pairing",
+      "label": "학생04 (교사DT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "우",
+      "slot_index": 0,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "III",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "大",
+      "slot_index": 1,
+      "kind": "pairing",
+      "label": "학생05 (교사ET)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "우",
+      "slot_index": 1,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "III",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "中",
+      "slot_index": 2,
+      "kind": "pairing",
+      "label": "학생06 (교사FT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "우",
+      "slot_index": 2,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "III",
+      "slot_index": 3,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "우",
+      "slot_index": 3,
+      "kind": "pairing",
+      "label": "학생01 (교사AT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "III",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "우",
+      "slot_index": 4,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "I",
+      "slot_index": 5,
+      "kind": "pairing",
+      "label": "학생02 (교사BT)",
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "III",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    },
+    {
+      "date": "2026-07-10",
+      "room": "우",
+      "slot_index": 5,
+      "kind": "block",
+      "label": null,
+      "text": null,
+      "color": null
+    }
+  ],
+  "memos": [
+    {
+      "date": "2026-07-06",
+      "lines": {
+        "06:00": {
+          "text": "샘플 메모"
+        }
+      }
+    }
+  ]
+}

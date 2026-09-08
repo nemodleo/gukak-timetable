@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +40,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# project data spreadsheets — source xlsx are large binaries; keep the dir, ignore contents
+/data/*
+!/data/.keep
+
+# generated seed holds real student/teacher names — the committed copy is a small
+# anonymised placeholder (force-added once); `make seed` overwrites it locally.
+/src/data/seed-2026.json
+
+# python (xlsx parsing)
+/.venv

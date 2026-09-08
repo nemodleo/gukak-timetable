@@ -1,69 +1,167 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getMonthData, getSettings } from "@/lib/data";
+import {
+  indexDayConfigs,
+  iso,
+  isInMonth,
+  monthLabel,
+  weeksOfMonth,
+} from "@/lib/schedule";
+import { actualVsTarget } from "@/lib/stats";
+import { MonthCalendar } from "@/components/MonthCalendar";
+import { MonthCapture } from "@/components/MonthCapture";
+import { Legend, PageHeader, SectionTitle, StepNav } from "@/components/ui";
+import { ConfigNotice } from "@/components/ConfigNotice";
+import { hasSupabase } from "@/lib/supabaseServer";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+function shiftMonth(y: number, m: number, d: number) {
+  const total = y * 12 + (m - 1) + d;
+  return { y: Math.floor(total / 12), m: (total % 12) + 1 };
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ y?: string; m?: string }>;
+}) {
+  const sp = await searchParams;
+  const base = await getSettings();
+  const y = Number(sp.y) || base.year;
+  const m = Number(sp.m) || base.month;
+
+  const data = await getMonthData(y, m);
+  const weeks = weeksOfMonth(y, m, data.settings.week_start);
+  // stats count THIS month's days only — weeks spill into neighbouring months
+  const inMonthDates = weeks
+    .flatMap((w) => w.days)
+    .filter((d) => isInMonth(d, y, m))
+    .map(iso);
+  const dateSet = new Set(inMonthDates);
+  const cfgMap = indexDayConfigs(data.dayConfigs);
+  const avt = actualVsTarget(data.pairings, data.cells, data.settings, dateSet, cfgMap);
+  const anyCells = data.cells.some((c) => dateSet.has(c.date));
+  // 목표시수와 차이 나는(초과·미달) 배정 전부 — |차이| 큰 순
+  const mismatched = avt
+    .filter((a) => a.status === "over" || a.status === "under")
+    .sort(
+      (a, b) =>
+        Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0) ||
+        (b.diff ?? -99) - (a.diff ?? -99),
+    );
+
+  const prev = shiftMonth(y, m, -1);
+  const next = shiftMonth(y, m, 1);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+    <div className="space-y-7">
+      <PageHeader
+        eyebrow={data.settings.school_name}
+        title={`${monthLabel(y, m)} 시간표`}
+        actions={
+          <>
+            <MonthCapture
+              dates={inMonthDates}
+              monthLabel={`${y}-${String(m).padStart(2, "0")}`}
+              settings={data.settings}
+              pairings={data.pairings}
+              cells={data.cells}
+              memos={data.memos}
+              dayConfigs={data.dayConfigs}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <StepNav
+              prev={`/?y=${prev.y}&m=${prev.m}`}
+              next={`/?y=${next.y}&m=${next.m}`}
+              label={`${y}. ${String(m).padStart(2, "0")}`}
+            />
+          </>
+        }
+      />
+
+      {!hasSupabase() && <ConfigNotice />}
+
+      <section>
+        <SectionTitle
+          sub="주를 클릭하면 주간 시간표, 날짜를 클릭하면 일별 시간표로 이동합니다."
+          right={<Legend />}
+        >
+          월간 달력
+        </SectionTitle>
+        <MonthCalendar
+          weeks={weeks}
+          year={y}
+          month={m}
+          cells={data.cells}
+          settings={data.settings}
+          dayConfigs={data.dayConfigs}
+        />
+      </section>
+
+      <section>
+        <SectionTitle
+          sub={`목표시수와 차이 나는 배정 ${mismatched.length}건 · 전체 명단은 통계에서`}
+          right={
+            <Link
+              href="/stats"
+              className="text-[13px] text-clay underline-offset-4 hover:underline"
+            >
+              전체 통계 →
+            </Link>
+          }
+        >
+          수업 차이
+        </SectionTitle>
+        {mismatched.length === 0 ? (
+          <p className="rounded-lg border bg-paper px-4 py-3 text-[13px] text-ink-3">
+            {anyCells
+              ? "모든 배정이 목표시수와 일치합니다."
+              : "아직 배정이 없습니다."}
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border">
+            <table className="w-full text-left text-[13px]">
+              <thead className="bg-paper-2 text-[11px] text-ink-3">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">학생 (교사)</th>
+                  <th className="px-3 py-2 text-right font-semibold">실배정</th>
+                  <th className="px-3 py-2 text-right font-semibold">목표</th>
+                  <th className="px-3 py-2 text-right font-semibold">차이</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mismatched.map((a) => (
+                  <tr key={a.pairing.id} className="border-t">
+                    <td className="px-3 py-1.5">{a.pairing.label}</td>
+                    <td className="px-3 py-1.5 text-right tabular-nums">{a.actual}</td>
+                    <td className="px-3 py-1.5 text-right tabular-nums text-ink-3">
+                      {a.target ?? "—"}
+                    </td>
+                    <td
+                      className={
+                        "px-3 py-1.5 text-right tabular-nums font-semibold " +
+                        (a.status === "over" ? "text-over" : "text-warn")
+                      }
+                    >
+                      {a.diff != null && a.diff > 0 ? `+${a.diff}` : a.diff}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {!anyCells && (
+        <p className="text-[13px] text-ink-3">
+          아직 배정된 시간표가 없습니다.{" "}
+          <Link className="text-clay underline" href="/admin">
+            관리자
+          </Link>
+          에서 엑셀 데이터를 가져오세요.
+        </p>
+      )}
     </div>
   );
 }

@@ -1,0 +1,6 @@
+# 런타임에 필요 없는 것 — 배포 업로드에서 제외
+data/*.xlsx
+.venv
+scripts/parse_xlsx.py
+*.md
+!README.md
