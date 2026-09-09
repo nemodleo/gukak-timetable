@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import clsx from "clsx";
 import type { Cell, DayConfig, Pairing, Settings } from "@/lib/types";
 import { DOW_KO, dowOrder } from "@/lib/stats";
-import { actualVsTarget, weekdayMatrix } from "@/lib/stats";
+import { actualVsTarget, cellHours, weekdayMatrix } from "@/lib/stats";
 import { indexDayConfigs } from "@/lib/schedule";
 import { badgeBg, gradeKey } from "@/lib/colors";
 import { SectionTitle } from "./ui";
@@ -93,6 +93,24 @@ export function StatsView({
     cfgMap,
   );
 
+  // pairing × 주차 시간 (요일 표에 열로 덧붙임)
+  const byWeek = useMemo(() => {
+    const weekOf = new Map<string, number>();
+    weeks.forEach((w, i) => w.days.forEach((d) => weekOf.set(d, i)));
+    const m = new Map<string, number[]>();
+    for (const p of pairings)
+      if (p.active) m.set(p.id, new Array(weeks.length).fill(0));
+    for (const c of scopedCells) {
+      if (c.kind !== "pairing" || !c.pairing_id) continue;
+      const wi = weekOf.get(c.date);
+      if (wi == null) continue;
+      const arr = m.get(c.pairing_id);
+      if (!arr) continue;
+      arr[wi] += cellHours(c, settings, cfgMap);
+    }
+    return m;
+  }, [pairings, scopedCells, weeks, settings, cfgMap]);
+
   const orderG = dowOrder(settings.week_start);
 
   return (
@@ -169,11 +187,11 @@ export function StatsView({
         </div>
       </section>
 
-      {/* pairing x weekday matrix */}
+      {/* pairing x weekday + week matrix */}
       <section>
-        <SectionTitle>페어링 × 요일</SectionTitle>
+        <SectionTitle>페어링 × 요일 · 주차</SectionTitle>
         <div className="overflow-x-auto rounded-lg border scroll-thin">
-          <table className="w-full min-w-[560px] text-left text-[12.5px]">
+          <table className="w-full min-w-[720px] text-left text-[12.5px]">
             <thead className="bg-paper-2 text-[11px] text-ink-3">
               <tr>
                 <th className="px-3 py-2 font-semibold">학생 (교사)</th>
@@ -188,29 +206,58 @@ export function StatsView({
                     {DOW_KO[g]}
                   </th>
                 ))}
+                {weeks.map((w, i) => (
+                  <th
+                    key={w.key}
+                    className={clsx(
+                      "px-2 py-2 text-center font-semibold text-ink-3",
+                      i === 0 && "border-l border-line",
+                    )}
+                  >
+                    {w.index}주
+                  </th>
+                ))}
                 <th className="px-3 py-2 text-right font-semibold">합계</th>
               </tr>
             </thead>
             <tbody>
-              {matrix.map((r) => (
-                <tr key={r.pairing.id} className="border-t">
-                  <td className="px-3 py-1.5">{r.pairing.label}</td>
-                  {r.byDay.map((h, i) => (
-                    <td
-                      key={i}
-                      className={clsx(
-                        "px-2 py-1.5 text-center tabular-nums",
-                        h === 0 ? "text-line-strong" : "text-ink",
-                      )}
-                    >
-                      {h || "·"}
+              {matrix.map((r) => {
+                const wk = byWeek.get(r.pairing.id) ?? [];
+                return (
+                  <tr key={r.pairing.id} className="border-t">
+                    <td className="px-3 py-1.5">{r.pairing.label}</td>
+                    {r.byDay.map((h, i) => (
+                      <td
+                        key={i}
+                        className={clsx(
+                          "px-2 py-1.5 text-center tabular-nums",
+                          h === 0 ? "text-line-strong" : "text-ink",
+                        )}
+                      >
+                        {h || "·"}
+                      </td>
+                    ))}
+                    {weeks.map((w, i) => {
+                      const h = wk[i] ?? 0;
+                      return (
+                        <td
+                          key={w.key}
+                          className={clsx(
+                            "px-2 py-1.5 text-center tabular-nums",
+                            i === 0 && "border-l border-line",
+                            h === 0 ? "text-line-strong" : "text-ink-2",
+                          )}
+                        >
+                          {h || "·"}
+                        </td>
+                      );
+                    })}
+                    <td className="px-3 py-1.5 text-right font-medium tabular-nums">
+                      {r.total}
                     </td>
-                  ))}
-                  <td className="px-3 py-1.5 text-right font-medium tabular-nums">
-                    {r.total}
-                  </td>
-                </tr>
-              ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

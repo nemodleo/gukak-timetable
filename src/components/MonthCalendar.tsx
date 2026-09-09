@@ -49,14 +49,22 @@ export function MonthCalendar({
       blockedH.set(c.date, (blockedH.get(c.date) ?? 0) + h);
   }
 
+  // 좁으면 "주" 열을 줄이다가(88 → 52 → 0) 없앤다. 요일 열은 최소 폭 유지.
+  const gridCols =
+    "[grid-template-columns:repeat(7,minmax(0,1fr))] " +
+    "sm:[grid-template-columns:52px_repeat(7,minmax(0,1fr))] " +
+    "lg:[grid-template-columns:88px_repeat(7,minmax(0,1fr))]";
+
   return (
     <div className="overflow-x-auto scroll-thin rounded-lg border">
-      <div className="min-w-[560px]">
+      <div className="min-w-[480px]">
       <div
-        className="grid border-b bg-paper-2 text-[11px] font-semibold text-ink-3"
-        style={{ gridTemplateColumns: "repeat(8, minmax(0, 1fr))" }}
+        className={clsx(
+          "grid border-b bg-paper-2 text-[11px] font-semibold text-ink-3",
+          gridCols,
+        )}
       >
-        <div className="px-3 py-2">주</div>
+        <div className="hidden px-2 py-2 sm:block">주</div>
         {order.map((g) => (
           <div
             key={g}
@@ -77,13 +85,13 @@ export function MonthCalendar({
             key={w.key}
             className={clsx(
               "grid border-b last:border-b-0",
+              gridCols,
               active && "bg-[var(--color-current-week)]",
             )}
-            style={{ gridTemplateColumns: "repeat(8, minmax(0, 1fr))" }}
           >
             <Link
               href={`/week/${w.key}`}
-              className="flex items-center border-r px-3 py-2.5 text-[12px] font-semibold text-ink transition-colors hover:bg-paper-2"
+              className="hidden items-center overflow-hidden whitespace-nowrap border-r px-2 py-2.5 text-[12px] font-semibold text-ink transition-colors hover:bg-paper-2 sm:flex sm:px-3"
             >
               {w.index}주
             </Link>
