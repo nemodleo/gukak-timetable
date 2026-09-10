@@ -48,6 +48,18 @@ This project turns that workbook into a shared, editable web app:
 
 ---
 
+## Manuals (한국어)
+
+Task-oriented guides for each role, with screenshots — meant to be handed to school staff.
+
+| 매뉴얼 | 대상 | 내용 |
+| --- | --- | --- |
+| [관리자 매뉴얼](docs/admin-manual.md) | 시간표 담당 교사 | 전 기능 — 로그인·권한, 세 뷰, 칸 편집, 비활성 칸, 그리드 구조, 명단·목표시수·설정·데이터, 통계, 자주 하는 작업, 문제 해결 |
+| [강사 매뉴얼](docs/instructor-manual.md) | 강사 | 로그인, 보기/편집, 학생 배정·이동, 메모, 되돌리기, 이미지 저장, 통계 열람 |
+| [학생 매뉴얼](docs/student-manual.md) | 학생 | 로그인 없이 월→주→일 보기, 색·빗금 의미, 내 시간표 이미지 저장 |
+
+---
+
 ## How it works
 
 ### Roles
