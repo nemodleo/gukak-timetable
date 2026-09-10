@@ -45,9 +45,14 @@ next-env.d.ts
 /data/*
 !/data/.keep
 
-# generated seed holds real student/teacher names — the committed copy is a small
-# anonymised placeholder (force-added once); `make seed` overwrites it locally.
+# the working seed holds real student/teacher names and is NEVER committed.
+# seed-2026.example.json (a tiny anonymised placeholder) is the only one in git;
+# scripts/ensure-seed.mjs copies it into place on a fresh checkout, and
+# `make seed` overwrites the copy with real data locally.
 /src/data/seed-2026.json
+/coverage
 
 # python (xlsx parsing)
 /.venv
+__pycache__/
+*.pyc

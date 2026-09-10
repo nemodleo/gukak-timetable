@@ -3,23 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/ensure-seed.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/ensure-seed.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "pretest": "node scripts/ensure-seed.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "seed:parse": "python3 scripts/parse_xlsx.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
     "clsx": "^2.1.1",
-    "date-fns": "^4.4.0",
     "jszip": "^3.10.1",
     "modern-screenshot": "^4.7.0",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "^0.0.1",
-    "zustand": "^5.0.15"
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -29,6 +33,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   }
 }

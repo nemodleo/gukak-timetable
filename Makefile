@@ -4,7 +4,8 @@
 #   make setup      의존성 설치 (npm + python venv)
 #   make dev        개발 서버
 #   make seed       data/*.xlsx → src/data/seed-2026.json 재생성
-#   make check      빌드 + 린트
+#   make test       vitest + 파서 파이썬 테스트
+#   make check      테스트 + 빌드 + 린트
 #   make preview    Vercel 프리뷰 배포
 #   make deploy     Vercel 프로덕션 배포 (check 후)
 #   make env-push   .env.local 의 환경변수를 Vercel(prod/preview/dev)에 등록
@@ -19,7 +20,7 @@ ENV_FILE    ?= .env.local
 ENV_SCOPES  ?= production preview development
 
 .DEFAULT_GOAL := help
-.PHONY: help setup install venv dev seed build lint check clean \
+.PHONY: help setup install venv dev seed test build lint check clean \
         link preview deploy env-push env-pull
 
 help:
@@ -43,13 +44,18 @@ seed:
 	@test -x $(PY) || { echo "먼저 'make venv' 를 실행하세요"; exit 1; }
 	$(PY) scripts/parse_xlsx.py
 
+test:
+	$(NPM) run test
+	@test -x $(PY) && $(PY) scripts/test_parse_xlsx.py || \
+		echo "(파서 테스트 건너뜀 — 'make venv' 필요)"
+
 build:
 	$(NPM) run build
 
 lint:
 	npx eslint src/
 
-check: build lint
+check: test build lint
 
 clean:
 	rm -rf .next out
