@@ -484,6 +484,20 @@ export function ScheduleEditor({
     );
   }
 
+  /** drag-reorder a room column — cells reference rooms by name, not
+   *  position, so no cell remap is needed. (Time blocks aren't reorderable
+   *  this way: the grid places them by clock time via gridGeom, so moving
+   *  a block's array position has no visual effect.) */
+  function reorderRoom(date: string, from: number, to: number) {
+    const s = effStruct(date);
+    if (from === to || from < 0 || to < 0 || from >= s.rooms.length || to >= s.rooms.length)
+      return;
+    const rooms = [...s.rooms];
+    const [moved] = rooms.splice(from, 1);
+    rooms.splice(to, 0, moved);
+    setStructFor(date, { rooms, slots: s.slots });
+  }
+
   function editRoom(date: string, i: number, name: string) {
     const s = effStruct(date);
     const old = s.rooms[i];
@@ -758,6 +772,7 @@ export function ScheduleEditor({
                 onAddRoom={() => addRoom(date)}
                 onEditRoom={(i, name) => editRoom(date, i, name)}
                 onDeleteRoom={(i) => deleteRoom(date, i)}
+                onReorderRoom={(from, to) => reorderRoom(date, from, to)}
                 onResetStruct={() => resetStruct(date)}
                 paintMode={isAdmin && !readOnly && paint}
                 onPaint={(targets, value) => paintCells(targets, value, date)}
@@ -851,6 +866,7 @@ function EditableDay({
   onAddRoom,
   onEditRoom,
   onDeleteRoom,
+  onReorderRoom,
   onResetStruct,
   paintMode,
   onPaint,
@@ -877,6 +893,7 @@ function EditableDay({
   onAddRoom: () => void;
   onEditRoom: (i: number, name: string) => void;
   onDeleteRoom: (i: number) => void;
+  onReorderRoom: (from: number, to: number) => void;
   onResetStruct: () => void;
   paintMode: boolean;
   onPaint: (targets: { room: string; slot: number }[], value: "block" | "clear") => void;
@@ -935,6 +952,7 @@ function EditableDay({
                 onRenameRoom: onEditRoom,
                 onDeleteRoom,
                 onAddRoom,
+                onReorderRoom,
                 onRetimeBlock: onEditBlock,
                 onDeleteBlock,
                 onAddBlock,
