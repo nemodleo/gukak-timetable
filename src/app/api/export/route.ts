@@ -38,6 +38,7 @@ export async function GET() {
       label: c.kind === "pairing" ? byId.get(c.pairing_id ?? "") ?? null : null,
       text: c.text,
       color: c.color ?? null,
+      active: c.active ?? true,
     })),
     memos,
     day_configs: dayConfigs,

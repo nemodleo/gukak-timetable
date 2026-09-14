@@ -11,7 +11,7 @@ import {
   rangeLabel,
   rangeLabelShort,
 } from "@/lib/time";
-import { keyOf, type CellIndex } from "@/lib/cellIndex";
+import { isInactiveCell, keyOf, type CellIndex } from "@/lib/cellIndex";
 import { CellBody } from "./Cell";
 
 const ROW_H = 27; // px per 30-min row
@@ -83,7 +83,10 @@ export function DayGrid({
   editable?: boolean;
   paintMode?: boolean;
   onCellClick?: (room: string, slotIndex: number) => void;
-  onPaint?: (targets: { room: string; slot: number }[], value: "block" | "clear") => void;
+  onPaint?: (
+    targets: { room: string; slot: number }[],
+    value: "deactivate" | "activate",
+  ) => void;
   structEdit?: StructEdit;
   dnd?: DnDCtl;
   fallback?: { start: string; end: string };
@@ -123,7 +126,7 @@ export function DayGrid({
     (showMemo ? ` ${showStruct ? 178 : 208}px` : "");
 
   /* ---- paint drag ---- */
-  const drag = useRef<{ value: "block" | "clear"; set: Set<string> } | null>(null);
+  const drag = useRef<{ value: "deactivate" | "activate"; set: Set<string> } | null>(null);
   const [preview, setPreview] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (!paintMode) return;
@@ -157,7 +160,7 @@ export function DayGrid({
   const pkey = (room: string, s: number) => `${room} ${s}`;
   const paintStart = (room: string, s: number) => {
     const cur = cellIndex.get(keyOf(date, room, s));
-    const value: "block" | "clear" = cur?.kind === "block" ? "clear" : "block";
+    const value: "deactivate" | "activate" = isInactiveCell(cur) ? "activate" : "deactivate";
     drag.current = { value, set: new Set([pkey(room, s)]) };
     setPreview(new Set([pkey(room, s)]));
   };
@@ -167,23 +170,23 @@ export function DayGrid({
     setPreview(new Set(drag.current.set));
   };
   /** 비활성 지정 모드에서 열(방) 이름을 클릭 — 그 방의 모든 시간대를 한번에 토글.
-   *  이미 전부 비활성이면 해제, 아니면 전부 비활성으로. */
+   *  이미 전부 비활성이면 해제, 아니면 전부 비활성으로 (내용은 그대로 둔다). */
   const paintColumn = (room: string) => {
     if (!onPaint) return;
     const targets = slots.map((_, s) => ({ room, slot: s }));
-    const allBlocked = targets.every(
-      (t) => cellIndex.get(keyOf(date, t.room, t.slot))?.kind === "block",
+    const allInactive = targets.every((t) =>
+      isInactiveCell(cellIndex.get(keyOf(date, t.room, t.slot))),
     );
-    onPaint(targets, allBlocked ? "clear" : "block");
+    onPaint(targets, allInactive ? "activate" : "deactivate");
   };
   /** 비활성 지정 모드에서 행(시간) 이름을 클릭 — 그 시간대의 모든 방을 한번에 토글. */
   const paintRow = (s: number) => {
     if (!onPaint) return;
     const targets = rooms.map((room) => ({ room, slot: s }));
-    const allBlocked = targets.every(
-      (t) => cellIndex.get(keyOf(date, t.room, t.slot))?.kind === "block",
+    const allInactive = targets.every((t) =>
+      isInactiveCell(cellIndex.get(keyOf(date, t.room, t.slot))),
     );
-    onPaint(targets, allBlocked ? "clear" : "block");
+    onPaint(targets, allInactive ? "activate" : "deactivate");
   };
 
   return (

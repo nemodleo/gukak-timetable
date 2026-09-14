@@ -36,6 +36,9 @@ export function CellBody({
   }
 
   if (cell.kind === "pairing" && pairing) {
+    // 비활성 지정 = 배정 내용은 그대로 두고 해칭만 덮는다(강사 입력만 막힘,
+    // 통계엔 그대로 포함).
+    const inactive = cell.active === false;
     const gk = gradeKey(pairing.grade, pairing.label);
     return (
       <span
@@ -43,9 +46,11 @@ export function CellBody({
           "flex h-full w-full flex-col justify-center rounded-[3px] px-1.5 py-1 leading-tight",
           size === "lg" ? "text-[13px]" : "text-[11.5px]",
         )}
-        style={{ background: cellBg[gk] }}
+        style={inactive ? { backgroundImage: HATCH } : { background: cellBg[gk] }}
       >
-        <span className="font-medium text-ink">{pairing.student_name}</span>
+        <span className={clsx("font-medium text-ink", inactive && "opacity-70")}>
+          {pairing.student_name}
+        </span>
         {pairing.teacher_name && (
           <span className="text-[0.85em] text-ink-2">({pairing.teacher_name})</span>
         )}

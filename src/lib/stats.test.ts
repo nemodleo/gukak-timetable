@@ -50,6 +50,7 @@ function cell(
     pairing_id: pairingId,
     text: null,
     color: null,
+    active: true,
   };
 }
 

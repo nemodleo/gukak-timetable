@@ -46,6 +46,10 @@ export interface Cell {
   pairing_id: string | null;
   text: string | null;
   color: CellColor | null;
+  /** false = 비활성 지정: 내용(배정/텍스트)은 그대로 두고 강사 입력만 막고
+   *  회색으로 표시한다. 통계는 active와 무관하게 항상 kind==="pairing"이면
+   *  카운트된다. 기본값 true. */
+  active: boolean;
 }
 
 /** ruled memo column — one line per 30-min mark, keyed "HH:MM" */
@@ -78,6 +82,7 @@ export interface SeedPayload {
     label: string | null;
     text: string | null;
     color?: CellColor | null;
+    active?: boolean;
   }>;
   memos: DayMemo[];
   day_configs?: DayConfig[];

@@ -40,6 +40,7 @@ create table if not exists public.schedule_cells (
   pairing_id uuid references public.pairings(id) on delete cascade,
   text       text,
   color      text,                       -- 직접 입력 칸 배경 tint: y|r|g|b
+  active     boolean not null default true, -- false = 비활성 지정(내용은 유지, 강사 입력 제한, 통계엔 항상 포함)
   updated_at timestamptz not null default now(),
   unique (date, room, slot_index)
 );
@@ -67,6 +68,14 @@ alter table public.schedule_cells drop constraint if exists schedule_cells_kind_
 update public.schedule_cells set kind = 'block' where kind = 'text';
 alter table public.schedule_cells
   add constraint schedule_cells_kind_check check (kind in ('pairing','block'));
+
+-- schedule_cells: 비활성 지정 = 내용을 지우지 않고 active만 끈다(배정/텍스트 유지,
+-- 강사 입력만 제한, 통계엔 항상 포함). 예전 "비활성 지정"이 만든, 내용 없는 순수
+-- 잠금용 block 칸(배정도 텍스트도 색도 없음)은 active=false로 재해석한다.
+alter table public.schedule_cells add column if not exists active boolean not null default true;
+update public.schedule_cells
+  set active = false
+  where kind = 'block' and pairing_id is null and text is null and color is null and active is true;
 
 -- pairings: global roster -> per-month roster (ym = "YYYY-MM")
 alter table public.pairings add column if not exists ym text not null default '';

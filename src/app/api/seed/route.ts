@@ -69,7 +69,12 @@ export async function POST(req: Request) {
   if (payload.cells?.length) {
     const rows = payload.cells
       .map((c) => {
-        const base = { date: c.date, room: c.room, slot_index: c.slot_index };
+        const base = {
+          date: c.date,
+          room: c.room,
+          slot_index: c.slot_index,
+          active: c.active ?? true,
+        };
         if (c.kind === "pairing") {
           const pid = c.label
             ? idByYmLabel.get(`${ymOf(c.date)}|${c.label}`)

@@ -38,10 +38,11 @@ const idByYmLabel = new Map(demoPairings.map((p) => [`${p.ym}|${p.label}`, p.id]
 export const demoCells: Cell[] = s.cells
   .map((c, i): Cell | null => {
     const base = { id: `demo-cell:${i}`, date: c.date, room: c.room, slot_index: c.slot_index };
+    const active = c.active ?? true;
     if (c.kind === "pairing") {
       const pid = c.label ? idByYmLabel.get(`${ymOf(c.date)}|${c.label}`) : undefined;
       if (!pid) return null;
-      return { ...base, kind: "pairing", pairing_id: pid, text: null, color: null };
+      return { ...base, kind: "pairing", pairing_id: pid, text: null, color: null, active };
     }
     return {
       ...base,
@@ -49,6 +50,7 @@ export const demoCells: Cell[] = s.cells
       pairing_id: null,
       text: c.text ?? null,
       color: c.color ?? null,
+      active,
     };
   })
   .filter((c): c is Cell => c !== null);

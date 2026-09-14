@@ -4,6 +4,7 @@ import { requireAdmin, requireDb, requireEditor } from "../_guard";
 import { getCells } from "@/lib/data";
 
 // 칸 PUT: 배정(pairing) = 강사+관리자. 비수업(block) 칸의 생성/수정/삭제 = 관리자만.
+// 비활성 지정(active=false)도 관리자만 — 내용은 그대로 두고 강사 입력만 막는다.
 // 날짜 전체 삭제(구조 재저장용) = 관리자만.
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,9 @@ interface InCell {
   pairing_id?: string | null;
   text?: string | null;
   color?: string | null;
+  /** false = 비활성 지정. 내용(kind/pairing_id/text/color)은 그대로 두고
+   *  강사 입력만 막는다 — 관리자만 바꿀 수 있다. */
+  active?: boolean;
 }
 
 export async function GET(req: Request) {
@@ -30,6 +34,7 @@ export async function GET(req: Request) {
 }
 
 function isEmpty(c: InCell): boolean {
+  if (c.active === false) return false; // 내용이 없어도 비활성 잠금은 남겨둬야 한다
   if (!c.kind) return true;
   if (c.kind === "block") return false;
   return !c.pairing_id; // pairing
@@ -44,22 +49,23 @@ export async function PUT(req: Request) {
   const body = await req.json();
   const list: InCell[] = Array.isArray(body) ? body : [body];
 
-  // 비수업(block) 칸은 관리자만 만들거나 건드릴 수 있다
+  // 비수업(block) 칸의 생성/수정, 비활성 지정/해제 자체 = 관리자만.
+  // 이미 비활성 지정된 칸(내용 있는 배정 포함)의 수정도 관리자만.
   const admin = await isAdmin();
   if (!admin) {
-    if (list.some((c) => c.kind === "block")) {
+    if (list.some((c) => c.kind === "block" || c.active === false)) {
       return NextResponse.json({ error: "비활성 칸은 관리자만 수정할 수 있습니다." }, { status: 403 });
     }
     const { data: existing } = await sb
       .from("schedule_cells")
-      .select("date,room,slot_index,kind")
+      .select("date,room,slot_index,kind,active")
       .in("date", [...new Set(list.map((c) => c.date))]);
-    const blockKeys = new Set(
+    const lockedKeys = new Set(
       (existing ?? [])
-        .filter((r) => r.kind === "block")
+        .filter((r) => r.kind === "block" || r.active === false)
         .map((r) => `${r.date}|${r.room}|${r.slot_index}`),
     );
-    if (list.some((c) => blockKeys.has(`${c.date}|${c.room}|${c.slot_index}`))) {
+    if (list.some((c) => lockedKeys.has(`${c.date}|${c.room}|${c.slot_index}`))) {
       return NextResponse.json({ error: "비활성 칸은 관리자만 수정할 수 있습니다." }, { status: 403 });
     }
   }
@@ -85,6 +91,7 @@ export async function PUT(req: Request) {
       text: c.kind === "block" ? c.text ?? null : null,
       color:
         c.kind === "block" && c.color && COLORS.has(c.color) ? c.color : null,
+      active: c.active ?? true,
       updated_at: new Date().toISOString(),
     }));
     const { error } = await sb

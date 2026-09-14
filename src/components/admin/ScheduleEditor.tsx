@@ -25,7 +25,7 @@ import {
   ymOf,
 } from "@/lib/schedule";
 import { fromMin, toMin } from "@/lib/time";
-import { keyOf } from "@/lib/cellIndex";
+import { hasCellContent, keyOf } from "@/lib/cellIndex";
 import { CELL_COLOR_OPTIONS, blockCellBg } from "@/lib/colors";
 import { DayGrid, EMPTY_MEMO_LINES, type DnDCtl } from "../DayGrid";
 import { DayCapture } from "../DayCapture";
@@ -229,7 +229,14 @@ export function ScheduleEditor({
     const res = await fetch("/api/schedule", {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ date: d.date, room: d.room, slot_index: d.slot, ...body }),
+      body: JSON.stringify({
+        date: d.date,
+        room: d.room,
+        slot_index: d.slot,
+        ...body,
+        // 내용 편집은 비활성 지정 상태를 건드리지 않는다(기존 상태 유지)
+        active: before?.active ?? true,
+      }),
     });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
@@ -252,6 +259,7 @@ export function ScheduleEditor({
           pairing_id: body.kind === "pairing" ? body.pairing_id ?? null : null,
           text: body.kind === "block" ? body.text ?? null : null,
           color: body.kind === "block" ? body.color ?? null : null,
+          active: before?.active ?? true,
         });
       return next;
     });
@@ -263,7 +271,7 @@ export function ScheduleEditor({
   // 그때그때 계산되므로 칸만 옮기면 통계·포화도가 저절로 다시 맞습니다.
   function canDragCell(cell: Cell | undefined): boolean {
     if (readOnly || !cell) return false;
-    return cell.kind === "block" ? isAdmin : true;
+    return cell.kind === "block" || cell.active === false ? isAdmin : true;
   }
 
   async function moveCell(from: Draft, to: Draft) {
@@ -290,6 +298,7 @@ export function ScheduleEditor({
         pairing_id: src.kind === "pairing" ? src.pairing_id : null,
         text: src.kind === "block" ? src.text : null,
         color: src.kind === "block" ? src.color : null,
+        active: src.active,
       },
       { date: from.date, room: from.room, slot_index: from.slot, kind: null },
     ];
@@ -321,23 +330,62 @@ export function ScheduleEditor({
     flash("이동했습니다");
   }
 
+  /** 비활성 지정/해제 — 내용(배정·텍스트)은 그대로 두고 active만 바꾼다.
+   *  기존에 아무 내용도 없던 칸을 비활성으로 지정할 땐 잠금 표시용 빈 block
+   *  칸을 만들고, 그런 칸을 다시 활성화할 땐(내용이 없으므로) 그냥 지운다. */
   async function paintCells(
     targets: { room: string; slot: number }[],
-    value: "block" | "clear",
+    value: "deactivate" | "activate",
     date: string,
   ) {
-    const undoOps = targets.map((t) => ({
-      date,
-      room: t.room,
-      slot: t.slot,
-      before: cells.get(keyOf(date, t.room, t.slot)) ?? null,
-    }));
-    const body = targets.map((t) => ({
-      date,
-      room: t.room,
-      slot_index: t.slot,
-      kind: value === "block" ? ("block" as const) : null,
-    }));
+    const items = targets
+      .map((t) => {
+        const before = cells.get(keyOf(date, t.room, t.slot)) ?? null;
+        if (value === "activate" && !before) return null; // 없던 걸 활성화할 것도 없음
+        return { t, before };
+      })
+      .filter((x): x is { t: { room: string; slot: number }; before: Cell | null } => x !== null);
+    if (!items.length) return;
+
+    const undoOps = items.map(({ t, before }) => ({ date, room: t.room, slot: t.slot, before }));
+    const body = items.map(({ t, before }) => {
+      if (value === "deactivate") {
+        if (before && hasCellContent(before))
+          return {
+            date,
+            room: t.room,
+            slot_index: t.slot,
+            kind: before.kind,
+            pairing_id: before.kind === "pairing" ? before.pairing_id : null,
+            text: before.kind === "block" ? before.text : null,
+            color: before.kind === "block" ? before.color : null,
+            active: false,
+          };
+        return {
+          date,
+          room: t.room,
+          slot_index: t.slot,
+          kind: "block" as const,
+          pairing_id: null,
+          text: null,
+          color: null,
+          active: false,
+        };
+      }
+      // activate
+      if (before && hasCellContent(before))
+        return {
+          date,
+          room: t.room,
+          slot_index: t.slot,
+          kind: before.kind,
+          pairing_id: before.kind === "pairing" ? before.pairing_id : null,
+          text: before.kind === "block" ? before.text : null,
+          color: before.kind === "block" ? before.color : null,
+          active: true,
+        };
+      return { date, room: t.room, slot_index: t.slot, kind: null }; // 내용 없던 잠금칸 -> 완전히 비움
+    });
     const res = await fetch("/api/schedule", {
       method: "PUT",
       headers: { "content-type": "application/json" },
@@ -351,20 +399,26 @@ export function ScheduleEditor({
     pushUndo(undoOps);
     setCells((prev) => {
       const next = new Map(prev);
-      for (const t of targets) {
+      for (const { t, before } of items) {
         const k = keyOf(date, t.room, t.slot);
-        if (value === "block")
-          next.set(k, {
-            id: prev.get(k)?.id ?? `tmp-${k}`,
-            date,
-            room: t.room,
-            slot_index: t.slot,
-            kind: "block",
-            pairing_id: null,
-            text: null,
-            color: null,
-          });
-        else next.delete(k);
+        if (value === "deactivate") {
+          if (before && hasCellContent(before)) next.set(k, { ...before, active: false });
+          else
+            next.set(k, {
+              id: prev.get(k)?.id ?? `tmp-${k}`,
+              date,
+              room: t.room,
+              slot_index: t.slot,
+              kind: "block",
+              pairing_id: null,
+              text: null,
+              color: null,
+              active: false,
+            });
+        } else {
+          if (before && hasCellContent(before)) next.set(k, { ...before, active: true });
+          else next.delete(k);
+        }
       }
       return next;
     });
@@ -852,9 +906,9 @@ export function ScheduleEditor({
                   readOnly
                     ? undefined
                     : (room, slot) => {
-                        // 비수업 칸은 관리자만 수정 가능
+                        // 비수업 칸·비활성 지정된 칸은 관리자만 수정 가능
                         const cur = cells.get(keyOf(date, room, slot));
-                        if (cur?.kind === "block" && !isAdmin) return;
+                        if ((cur?.kind === "block" || cur?.active === false) && !isAdmin) return;
                         setDraft({ date, room, slot });
                       }
                 }
@@ -996,7 +1050,10 @@ function EditableDay({
   onSwapBlock: (from: number, to: number) => void;
   onResetStruct: () => void;
   paintMode: boolean;
-  onPaint: (targets: { room: string; slot: number }[], value: "block" | "clear") => void;
+  onPaint: (
+    targets: { room: string; slot: number }[],
+    value: "deactivate" | "activate",
+  ) => void;
 }) {
   const d = parseIso(date);
   const { rooms, slots } = struct;
