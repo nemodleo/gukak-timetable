@@ -61,7 +61,7 @@ export function inactiveBackgroundStyle(
 ): CSSProperties {
   switch (pattern) {
     case "solid":
-      return { backgroundColor: patternColor };
+      return { backgroundColor: bgColor };
     case "dots":
       return {
         backgroundColor: bgColor,
