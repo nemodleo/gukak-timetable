@@ -26,7 +26,7 @@ import {
 import { fromMin, toMin } from "@/lib/time";
 import { keyOf } from "@/lib/cellIndex";
 import { CELL_COLOR_OPTIONS, blockCellBg } from "@/lib/colors";
-import { DayGrid, EMPTY_MEMO_LINES } from "../DayGrid";
+import { DayGrid, EMPTY_MEMO_LINES, type DnDCtl } from "../DayGrid";
 import { DayCapture } from "../DayCapture";
 
 type Draft = { date: string; room: string; slot: number };
@@ -86,6 +86,8 @@ export function ScheduleEditor({
   /** 칸 편집 되돌리기 스택 — 각 항목은 한 번의 편집(칸 여러 개 가능) */
   type UndoOp = { date: string; room: string; slot: number; before: Cell | null };
   const [undoStack, setUndoStack] = useState<UndoOp[][]>([]);
+  const [dragFrom, setDragFrom] = useState<Draft | null>(null);
+  const [dragOver, setDragOver] = useState<Draft | null>(null);
   const undoStackRef = useRef<UndoOp[][]>([]);
   const doUndoRef = useRef<() => void>(() => {});
   const loaded = useRef<Set<string>>(new Set([firstWeekKey]));
@@ -250,6 +252,69 @@ export function ScheduleEditor({
       return next;
     });
     setDraft(null);
+  }
+
+  // 칸 드래그 이동 — 배정(강사+관리자)·비활성(관리자만) 칸을 다른 시간/칸으로.
+  // 이동 = 대상 칸에 그대로 쓰고 원래 칸을 비움; 시수는 어디서든 slotHours(date, slot_index)로
+  // 그때그때 계산되므로 칸만 옮기면 통계·포화도가 저절로 다시 맞습니다.
+  function canDragCell(cell: Cell | undefined): boolean {
+    if (readOnly || !cell) return false;
+    return cell.kind === "block" ? isAdmin : true;
+  }
+
+  async function moveCell(from: Draft, to: Draft) {
+    setDragFrom(null);
+    setDragOver(null);
+    if (keyOf(from.date, from.room, from.slot) === keyOf(to.date, to.room, to.slot))
+      return;
+    const src = cells.get(keyOf(from.date, from.room, from.slot));
+    if (!src || !canDragCell(src)) return;
+    const destBefore = cells.get(keyOf(to.date, to.room, to.slot)) ?? null;
+    if (destBefore) {
+      const label =
+        destBefore.kind === "pairing"
+          ? (pById.get(destBefore.pairing_id ?? "")?.label ?? "배정")
+          : "비활성 칸";
+      if (!confirm(`이동할 칸에 이미 "${label}" 이(가) 있습니다. 덮어쓸까요?`)) return;
+    }
+    const body = [
+      {
+        date: to.date,
+        room: to.room,
+        slot_index: to.slot,
+        kind: src.kind,
+        pairing_id: src.kind === "pairing" ? src.pairing_id : null,
+        text: src.kind === "block" ? src.text : null,
+        color: src.kind === "block" ? src.color : null,
+      },
+      { date: from.date, room: from.room, slot_index: from.slot, kind: null },
+    ];
+    const res = await fetch("/api/schedule", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      flash(`이동 실패: ${j.error ?? res.status}`);
+      return;
+    }
+    pushUndo([
+      { date: to.date, room: to.room, slot: to.slot, before: destBefore },
+      { date: from.date, room: from.room, slot: from.slot, before: src },
+    ]);
+    setCells((prev) => {
+      const next = new Map(prev);
+      next.delete(keyOf(from.date, from.room, from.slot));
+      next.set(keyOf(to.date, to.room, to.slot), {
+        ...src,
+        date: to.date,
+        room: to.room,
+        slot_index: to.slot,
+      });
+      return next;
+    });
+    flash("이동했습니다");
   }
 
   async function paintCells(
@@ -692,6 +757,31 @@ export function ScheduleEditor({
                 onResetStruct={() => resetStruct(date)}
                 paintMode={isAdmin && !readOnly && paint}
                 onPaint={(targets, value) => paintCells(targets, value, date)}
+                dnd={
+                  readOnly || paint
+                    ? undefined
+                    : {
+                        canDrag: canDragCell,
+                        isSource: (room, slot) =>
+                          dragFrom?.date === date &&
+                          dragFrom.room === room &&
+                          dragFrom.slot === slot,
+                        isOver: (room, slot) =>
+                          !!dragFrom &&
+                          dragOver?.date === date &&
+                          dragOver.room === room &&
+                          dragOver.slot === slot,
+                        onDragStart: (room, slot) => setDragFrom({ date, room, slot }),
+                        onDragOver: (room, slot) => setDragOver({ date, room, slot }),
+                        onDrop: (room, slot) => {
+                          if (dragFrom) moveCell(dragFrom, { date, room, slot });
+                        },
+                        onDragEnd: () => {
+                          setDragFrom(null);
+                          setDragOver(null);
+                        },
+                      }
+                }
               />
             );
           })}
@@ -760,6 +850,7 @@ function EditableDay({
   onResetStruct,
   paintMode,
   onPaint,
+  dnd,
 }: {
   date: string;
   wide?: boolean;
@@ -773,6 +864,7 @@ function EditableDay({
   pById: Map<string, Pairing>;
   memoLines: Record<string, MemoLine>;
   onCellClick?: (room: string, slot: number) => void;
+  dnd?: DnDCtl;
   onMemoChange: (hhmm: string, line: MemoLine | null) => void;
   onAddBlock: () => void;
   onInsertBlock: (start: string, end: string) => void;
@@ -832,6 +924,7 @@ function EditableDay({
         paintMode={paintMode}
         onCellClick={onCellClick}
         onPaint={onPaint}
+        dnd={dnd}
         structEdit={
           canStruct
             ? {

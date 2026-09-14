@@ -53,6 +53,8 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [copiedFrom, setCopiedFrom] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
   const reqId = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const savingRef = useRef(false);
@@ -160,6 +162,16 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
     doSave(next, ym);
   }
 
+  function moveRow(from: number, to: number) {
+    if (from === to || from < 0 || to < 0 || from >= rows.length || to >= rows.length)
+      return;
+    const next = [...rows];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    setRows(next);
+    doSave(next, ym); // reorder saves immediately, not on blur
+  }
+
   async function removeRow(i: number) {
     const row = rows[i];
     if (
@@ -241,6 +253,7 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-paper-2 text-[11px] text-ink-3">
               <tr>
+                <th className="w-6 px-1 py-2" />
                 <th className="px-2 py-2 font-semibold">학생</th>
                 <th className="px-2 py-2 font-semibold">학년</th>
                 <th className="px-2 py-2 font-semibold">교사</th>
@@ -253,7 +266,46 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
               {rows.map((r, i) => {
                 const gk = gradeKey(r.grade, r.label);
                 return (
-                  <tr key={r.id ?? `new-${i}`} className="border-t">
+                  <tr
+                    key={r.id ?? `new-${i}`}
+                    onDragOver={(e) => {
+                      if (dragIdx == null) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (overIdx !== i) setOverIdx(i);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (dragIdx != null) moveRow(dragIdx, i);
+                      setDragIdx(null);
+                      setOverIdx(null);
+                    }}
+                    className={clsx(
+                      "border-t",
+                      dragIdx === i && "opacity-40",
+                      overIdx === i && dragIdx !== null && dragIdx !== i &&
+                        "border-t-2 border-t-clay",
+                    )}
+                  >
+                    <td className="px-1 py-1 text-center">
+                      <span
+                        draggable
+                        onDragStart={(e) => {
+                          setDragIdx(i);
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData("text/plain", String(i));
+                        }}
+                        onDragEnd={() => {
+                          setDragIdx(null);
+                          setOverIdx(null);
+                        }}
+                        className="inline-block cursor-grab select-none px-0.5 text-ink-3 hover:text-ink-2 active:cursor-grabbing"
+                        title="드래그해서 순서 변경"
+                        aria-label="순서 변경 핸들"
+                      >
+                        ⠿
+                      </span>
+                    </td>
                     <td className="px-2 py-1">
                       <input
                         className={inp}
