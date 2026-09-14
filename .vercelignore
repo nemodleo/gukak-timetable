@@ -4,3 +4,5 @@ data/*.xlsx
 scripts/parse_xlsx.py
 *.md
 !README.md
+# docs/*.md는 /docs/[slug]가 런타임에 읽어서 렌더링한다 — 빌드 업로드에 포함
+!docs/*.md
