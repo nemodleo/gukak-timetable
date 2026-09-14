@@ -7,6 +7,16 @@ export interface SlotDef {
   label?: string; // optional display override (default: derived 12h range)
 }
 
+/** 학년별 배지/칸 색 — 1학년·2학년·3학년·보강(합반) 4개 슬롯. hex 문자열
+ *  ("#rrggbb"). 옅은 칸 배경(wash)은 이 값에서 자동으로 계산되므로 admin은
+ *  이 4색만 고르면 된다. */
+export interface GradeColors {
+  g1: string;
+  g2: string;
+  g3: string;
+  gm: string;
+}
+
 export interface Settings {
   school_name: string;
   year: number;
@@ -15,6 +25,7 @@ export interface Settings {
   rooms: string[];
   time_slots_weekday: SlotDef[];
   time_slots_weekend: SlotDef[];
+  grade_colors: GradeColors;
 }
 
 export interface Pairing {
@@ -88,6 +99,13 @@ export interface SeedPayload {
   day_configs?: DayConfig[];
 }
 
+export const DEFAULT_GRADE_COLORS: GradeColors = {
+  g1: "#ffe599",
+  g2: "#ea9999",
+  g3: "#b6d7a8",
+  gm: "#a4c2f4",
+};
+
 export const DEFAULT_SETTINGS: Settings = {
   school_name: "국립국악고등학교",
   year: 2026,
@@ -115,4 +133,5 @@ export const DEFAULT_SETTINGS: Settings = {
     { start: "15:00", end: "17:00" },
     { start: "17:00", end: "18:00" },
   ],
+  grade_colors: DEFAULT_GRADE_COLORS,
 };

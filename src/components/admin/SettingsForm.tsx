@@ -2,8 +2,64 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Settings, SlotDef } from "@/lib/types";
+import type { GradeColors, Settings, SlotDef } from "@/lib/types";
+import { DEFAULT_GRADE_COLORS } from "@/lib/types";
 import { SectionTitle } from "../ui";
+
+const GRADE_SLOTS: { key: keyof GradeColors; label: string }[] = [
+  { key: "g1", label: "1학년" },
+  { key: "g2", label: "2학년" },
+  { key: "g3", label: "3학년" },
+  { key: "gm", label: "보강 · 합반" },
+];
+
+function GradeColorPicker({
+  colors,
+  onChange,
+}: {
+  colors: GradeColors;
+  onChange: (c: GradeColors) => void;
+}) {
+  return (
+    <div>
+      <div className="label-eyebrow mb-1.5 flex items-center justify-between gap-2">
+        <span>색 팔레트 (학년 배지 · 배정 칸 · 비활성 칸 색)</span>
+        <button
+          type="button"
+          className="font-normal normal-case tracking-normal text-clay hover:underline"
+          onClick={() => onChange(DEFAULT_GRADE_COLORS)}
+        >
+          기본값으로
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {GRADE_SLOTS.map(({ key, label }) => (
+          <label
+            key={key}
+            className="flex items-center gap-2 rounded-md border border-line-strong px-2.5 py-2"
+          >
+            <input
+              type="color"
+              value={colors[key]}
+              onChange={(e) => onChange({ ...colors, [key]: e.target.value })}
+              className="h-7 w-7 shrink-0 cursor-pointer rounded border border-line-strong bg-transparent p-0"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12px] text-ink-2">{label}</span>
+              <input
+                value={colors[key]}
+                onChange={(e) => onChange({ ...colors, [key]: e.target.value })}
+                className="w-full bg-transparent text-[11px] tabular-nums text-ink-3 outline-none"
+                maxLength={7}
+                spellCheck={false}
+              />
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const inp =
   "rounded-md border border-line-strong bg-paper px-2.5 py-1.5 text-[13px] outline-none focus:border-clay";
@@ -162,6 +218,11 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           onChange={(v) => setS({ ...s, time_slots_weekend: v })}
         />
       </div>
+
+      <GradeColorPicker
+        colors={s.grade_colors ?? DEFAULT_GRADE_COLORS}
+        onChange={(v) => setS({ ...s, grade_colors: v })}
+      />
 
       <div className="flex items-center gap-3">
         <button

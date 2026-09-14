@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DayConfig, Settings } from "./types";
+import { DEFAULT_GRADE_COLORS, type DayConfig, type Settings } from "./types";
 import {
   addDays,
   isInMonth,
@@ -30,6 +30,7 @@ const settings: Settings = {
     { start: "10:00", end: "11:00" },
   ],
   time_slots_weekend: [{ start: "09:00", end: "11:00" }],
+  grade_colors: DEFAULT_GRADE_COLORS,
 };
 
 describe("iso / parseIso / addDays", () => {

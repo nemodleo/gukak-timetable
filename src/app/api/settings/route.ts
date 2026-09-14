@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, requireDb } from "../_guard";
 import { getSettings } from "@/lib/data";
 import { DEFAULT_SETTINGS } from "@/lib/types";
+import { normalizeGradeColors } from "@/lib/colors";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export async function PUT(req: Request) {
       rooms: merged.rooms,
       time_slots_weekday: merged.time_slots_weekday,
       time_slots_weekend: merged.time_slots_weekend,
+      grade_colors: normalizeGradeColors(merged.grade_colors),
       updated_at: new Date().toISOString(),
     });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

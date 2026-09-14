@@ -20,16 +20,19 @@
   --color-clay-soft: #b79380;
   --color-clay-wash: #efe7df;
 
-  /* grade accents — soft washes for cells */
-  --color-g1: #f6ecc9;
-  --color-g2: #f2d6d2;
-  --color-g3: #d9e6d4;
-  --color-gm: #d3ddec;
-  /* grade accents — exact legacy hex for stat badges */
+  /* grade accents — the "badge" tone is the single source of truth, and is
+     the one admin picks in Settings → 색 팔레트 (RootLayout overrides these
+     four as inline custom properties from Settings.grade_colors). The soft
+     cell-background "wash" is derived from it below, so admin manages only
+     one color per grade. */
   --color-g1-badge: #ffe599;
   --color-g2-badge: #ea9999;
   --color-g3-badge: #b6d7a8;
   --color-gm-badge: #a4c2f4;
+  --color-g1: color-mix(in srgb, var(--color-g1-badge) 40%, var(--color-paper));
+  --color-g2: color-mix(in srgb, var(--color-g2-badge) 40%, var(--color-paper));
+  --color-g3: color-mix(in srgb, var(--color-g3-badge) 40%, var(--color-paper));
+  --color-gm: color-mix(in srgb, var(--color-gm-badge) 40%, var(--color-paper));
 
   --color-over: #b3261e;
   --color-warn: #b07d1c;

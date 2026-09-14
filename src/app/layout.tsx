@@ -3,6 +3,7 @@ import "./globals.css";
 import { getRole } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
 import { hasSupabase } from "@/lib/supabaseServer";
+import { DEFAULT_GRADE_COLORS } from "@/lib/types";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConfigNotice } from "@/components/ConfigNotice";
 
@@ -23,8 +24,18 @@ export default async function RootLayout({
     getSettings().catch(() => null),
     getRole().catch(() => null),
   ]);
+  // admin-configurable palette (Settings → 색 팔레트) — override the "badge"
+  // tone custom properties; the soft cell wash derives from these via
+  // color-mix() in globals.css, so this one override covers both.
+  const gc = settings?.grade_colors ?? DEFAULT_GRADE_COLORS;
+  const paletteVars = {
+    "--color-g1-badge": gc.g1,
+    "--color-g2-badge": gc.g2,
+    "--color-g3-badge": gc.g3,
+    "--color-gm-badge": gc.gm,
+  } as React.CSSProperties;
   return (
-    <html lang="ko">
+    <html lang="ko" style={paletteVars}>
       <body className="min-h-screen overflow-x-hidden">
         <SiteHeader
           schoolName={settings?.school_name ?? "국립국악고등학교"}

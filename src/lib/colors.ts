@@ -1,6 +1,23 @@
 /** grade -> visual treatment. Mirrors the xlsx conditional formatting:
  *  1 = yellow, 2 = red, 3 = green, label/grade containing "," = blue (보강). */
-import type { CellColor } from "./types";
+import { DEFAULT_GRADE_COLORS, type CellColor, type GradeColors } from "./types";
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+export function isHexColor(v: unknown): v is string {
+  return typeof v === "string" && HEX_RE.test(v);
+}
+
+/** validate a (possibly partial/malformed) grade_colors value from the DB
+ *  or a client request, falling back to the default per-slot on any miss. */
+export function normalizeGradeColors(v: unknown): GradeColors {
+  const o = (v ?? {}) as Partial<Record<keyof GradeColors, unknown>>;
+  return {
+    g1: isHexColor(o.g1) ? o.g1 : DEFAULT_GRADE_COLORS.g1,
+    g2: isHexColor(o.g2) ? o.g2 : DEFAULT_GRADE_COLORS.g2,
+    g3: isHexColor(o.g3) ? o.g3 : DEFAULT_GRADE_COLORS.g3,
+    gm: isHexColor(o.gm) ? o.gm : DEFAULT_GRADE_COLORS.gm,
+  };
+}
 
 export type GradeKey = "g1" | "g2" | "g3" | "gm" | "none";
 

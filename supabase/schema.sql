@@ -13,6 +13,7 @@ create table if not exists public.settings (
   rooms              jsonb not null default '["I","II","III","大","中","우"]'::jsonb,
   time_slots_weekday jsonb not null default '[]'::jsonb,
   time_slots_weekend jsonb not null default '[]'::jsonb,
+  grade_colors       jsonb not null default '{"g1":"#ffe599","g2":"#ea9999","g3":"#b6d7a8","gm":"#a4c2f4"}'::jsonb,
   updated_at         timestamptz not null default now(),
   constraint settings_singleton check (id = 1)
 );
@@ -62,6 +63,10 @@ create table if not exists public.day_configs (
 -- ---------------------------------------------------------------------------
 -- reconcile pre-existing tables (safe to run repeatedly)
 -- ---------------------------------------------------------------------------
+-- settings: 학년별 배지/칸 색을 관리자 설정에서 고를 수 있게
+alter table public.settings add column if not exists grade_colors jsonb
+  not null default '{"g1":"#ffe599","g2":"#ea9999","g3":"#b6d7a8","gm":"#a4c2f4"}'::jsonb;
+
 -- schedule_cells: 직접입력(text)을 비수업(block)으로 통합 — 셀 상태 = 비어있음/pairing/block
 alter table public.schedule_cells add column if not exists color text;
 alter table public.schedule_cells drop constraint if exists schedule_cells_kind_check;
