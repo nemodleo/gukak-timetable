@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireDb, requireEditor } from "../_guard";
+import { requireDaysApproved, requireDb, requireEditor } from "../_guard";
 import { getMemos } from "@/lib/data";
 import type { MemoLine, MemoSize } from "@/lib/types";
 
@@ -26,6 +26,9 @@ export async function PUT(req: Request) {
   const body = await req.json();
   const date: string = body.date;
   if (!date) return NextResponse.json({ error: "date 필요" }, { status: 400 });
+
+  const dayUnauth = await requireDaysApproved([date]);
+  if (dayUnauth) return dayUnauth;
 
   const lines: Record<string, MemoLine> = {};
   const src = body.lines ?? {};

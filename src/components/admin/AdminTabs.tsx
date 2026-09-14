@@ -18,6 +18,7 @@ export function AdminTabs({
   cells,
   memos,
   dayConfigs,
+  approvedDates,
   year,
   month,
   role,
@@ -27,6 +28,7 @@ export function AdminTabs({
   cells: Cell[];
   memos: DayMemo[];
   dayConfigs: DayConfig[];
+  approvedDates: string[];
   year: number;
   month: number;
   role: "admin" | "instructor" | null;
@@ -60,6 +62,7 @@ export function AdminTabs({
           initialCells={cells}
           initialMemos={memos}
           initialConfigs={dayConfigs}
+          approvedDates={approvedDates}
           year={year}
           month={month}
         />

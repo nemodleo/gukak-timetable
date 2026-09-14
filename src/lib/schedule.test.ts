@@ -9,6 +9,7 @@ import {
 } from "./types";
 import {
   addDays,
+  datesInRange,
   isInMonth,
   isWeekend,
   iso,
@@ -53,6 +54,21 @@ describe("iso / parseIso / addDays", () => {
     expect(iso(addDays(parseIso("2026-09-30"), 1))).toBe("2026-10-01");
     expect(iso(addDays(parseIso("2026-12-31"), 1))).toBe("2027-01-01");
     expect(iso(addDays(parseIso("2026-03-01"), -1))).toBe("2026-02-28");
+  });
+});
+
+describe("datesInRange", () => {
+  it("lists every date inclusive, crossing a month boundary", () => {
+    expect(datesInRange("2026-09-29", "2026-10-02")).toEqual([
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01",
+      "2026-10-02",
+    ]);
+  });
+
+  it("returns a single-element array for a one-day range", () => {
+    expect(datesInRange("2026-09-15", "2026-09-15")).toEqual(["2026-09-15"]);
   });
 });
 

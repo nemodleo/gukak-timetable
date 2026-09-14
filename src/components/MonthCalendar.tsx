@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import type { Cell, DayConfig, Settings } from "@/lib/types";
@@ -15,6 +18,8 @@ import {
 import { durationH } from "@/lib/time";
 import { DOW_KO, dowOrder } from "@/lib/stats";
 
+type Role = "admin" | "instructor" | null;
+
 export function MonthCalendar({
   weeks,
   year,
@@ -22,6 +27,8 @@ export function MonthCalendar({
   cells,
   settings,
   dayConfigs = [],
+  approvedDates = [],
+  role = null,
   currentKey,
 }: {
   weeks: Week[];
@@ -30,10 +37,58 @@ export function MonthCalendar({
   cells: Cell[];
   settings: Settings;
   dayConfigs?: DayConfig[];
+  /** 관리자가 승인(오픈)한 날짜 — 없는 날짜는 기본 잠금 */
+  approvedDates?: string[];
+  role?: Role;
   currentKey?: string;
 }) {
+  const isAdmin = role === "admin";
   const cfg = indexDayConfigs(dayConfigs);
   const order = dowOrder(settings.week_start);
+
+  const [approved, setApproved] = useState<Set<string>>(() => new Set(approvedDates));
+  const [paintMode, setPaintMode] = useState(false);
+  const [preview, setPreview] = useState<Set<string>>(new Set());
+  const drag = useRef<{ value: "approve" | "lock"; set: Set<string> } | null>(null);
+
+  useEffect(() => {
+    if (!paintMode) return;
+    const up = async () => {
+      const d = drag.current;
+      drag.current = null;
+      setPreview(new Set());
+      if (!d || !d.set.size) return;
+      const dates = [...d.set];
+      const nextApproved = d.value === "approve";
+      const res = await fetch("/api/day-approvals", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ dates, approved: nextApproved }),
+      });
+      if (!res.ok) return;
+      setApproved((prev) => {
+        const n = new Set(prev);
+        for (const date of dates) {
+          if (nextApproved) n.add(date);
+          else n.delete(date);
+        }
+        return n;
+      });
+    };
+    window.addEventListener("mouseup", up);
+    return () => window.removeEventListener("mouseup", up);
+  }, [paintMode]);
+
+  const paintStart = (date: string) => {
+    const value: "approve" | "lock" = approved.has(date) ? "lock" : "approve";
+    drag.current = { value, set: new Set([date]) };
+    setPreview(new Set([date]));
+  };
+  const paintEnter = (date: string) => {
+    if (!drag.current) return;
+    drag.current.set.add(date);
+    setPreview(new Set(drag.current.set));
+  };
 
   // 포화도: 수업(pairing) 채운 시간 ÷ 강사가 입력할 수 있는 시간
   //         (관리자가 설정한 강의실·시간블록 범위 − 비수업 시간)
@@ -56,110 +111,171 @@ export function MonthCalendar({
     "lg:[grid-template-columns:88px_repeat(7,minmax(0,1fr))]";
 
   return (
-    <div className="overflow-x-auto scroll-thin rounded-lg border">
-      <div className="min-w-[480px]">
+    <div className="space-y-2">
+      {isAdmin && (
+        <div data-no-capture>
+          <button
+            type="button"
+            onClick={() => setPaintMode((p) => !p)}
+            className={clsx(
+              "rounded-full border px-3.5 py-1.5 text-[12px] transition-colors",
+              paintMode
+                ? "border-clay bg-clay text-paper"
+                : "border-line-strong text-ink-2 hover:bg-paper-2",
+            )}
+          >
+            {paintMode ? "승인 지정 중 — 드래그하세요" : "승인 지정"}
+          </button>
+        </div>
+      )}
+
       <div
-        className={clsx(
-          "grid border-b bg-paper-2 text-[11px] font-semibold text-ink-3",
-          gridCols,
-        )}
+        className="overflow-x-auto scroll-thin rounded-lg border"
+        style={paintMode ? { userSelect: "none", cursor: "crosshair" } : undefined}
       >
-        <div className="hidden px-2 py-2 sm:block">주</div>
-        {order.map((g) => (
-          <div
-            key={g}
-            className={clsx(
-              "px-2 py-2 text-center",
-              (g === 0 || g === 6) && "text-clay",
-            )}
-          >
-            {DOW_KO[g]}
-          </div>
-        ))}
-      </div>
-
-      {weeks.map((w) => {
-        const active = w.key === currentKey;
-        return (
-          <div
-            key={w.key}
-            className={clsx(
-              "grid border-b last:border-b-0",
-              gridCols,
-              active && "bg-[var(--color-current-week)]",
-            )}
-          >
-            <Link
-              href={`/week/${w.key}`}
-              className="hidden items-center overflow-hidden whitespace-nowrap border-r px-2 py-2.5 text-[12px] font-semibold text-ink transition-colors hover:bg-paper-2 sm:flex sm:px-3"
+        <div className="min-w-[480px]">
+        <div
+          className={clsx(
+            "grid border-b bg-paper-2 text-[11px] font-semibold text-ink-3",
+            gridCols,
+          )}
+        >
+          <div className="hidden px-2 py-2 sm:block">주</div>
+          {order.map((g) => (
+            <div
+              key={g}
+              className={clsx(
+                "px-2 py-2 text-center",
+                (g === 0 || g === 6) && "text-clay",
+              )}
             >
-              {w.index}주
-            </Link>
+              {DOW_KO[g]}
+            </div>
+          ))}
+        </div>
 
-            {w.days.map((d) => {
-              const inMonth = isInMonth(d, year, month);
-              const dc = cfg.get(iso(d));
-              const perDayH = slotsForDate(d, settings, dc).reduce(
-                (a, s) => a + durationH(s.start, s.end),
-                0,
-              );
-              const capacity = perDayH * roomsForDate(d, settings, dc).length;
-              // 강사가 입력할 수 있는 시간 = 설정된 범위 − 비수업 시간
-              const available = Math.max(0, capacity - (blockedH.get(iso(d)) ?? 0));
-              const used = usedH.get(iso(d)) ?? 0;
-              const count = usedCount.get(iso(d)) ?? 0;
-              const pct = available > 0 ? used / available : 0;
-              return (
-                <Link
-                  key={iso(d)}
-                  href={`/day/${iso(d)}`}
-                  style={
-                    inMonth
-                      ? undefined
-                      : {
-                          backgroundImage:
-                            "repeating-linear-gradient(135deg, transparent 0 6px, var(--color-paper-2) 6px 7px)",
-                        }
-                  }
-                  className={clsx(
-                    "group flex min-h-[68px] flex-col gap-1 border-r px-2 py-1.5 transition-colors last:border-r-0 hover:bg-paper-2",
-                    !inMonth && "text-ink-3",
-                  )}
-                >
-                  <span
+        {weeks.map((w) => {
+          const active = w.key === currentKey;
+          return (
+            <div
+              key={w.key}
+              className={clsx(
+                "grid border-b last:border-b-0",
+                gridCols,
+                active && "bg-[var(--color-current-week)]",
+              )}
+            >
+              <Link
+                href={`/week/${w.key}`}
+                className="hidden items-center overflow-hidden whitespace-nowrap border-r px-2 py-2.5 text-[12px] font-semibold text-ink transition-colors hover:bg-paper-2 sm:flex sm:px-3"
+              >
+                {w.index}주
+              </Link>
+
+              {w.days.map((d) => {
+                const date = iso(d);
+                const inMonth = isInMonth(d, year, month);
+                const dc = cfg.get(date);
+                const perDayH = slotsForDate(d, settings, dc).reduce(
+                  (a, s) => a + durationH(s.start, s.end),
+                  0,
+                );
+                const capacity = perDayH * roomsForDate(d, settings, dc).length;
+                // 강사가 입력할 수 있는 시간 = 설정된 범위 − 비수업 시간
+                const available = Math.max(0, capacity - (blockedH.get(date) ?? 0));
+                const used = usedH.get(date) ?? 0;
+                const count = usedCount.get(date) ?? 0;
+                const pct = available > 0 ? used / available : 0;
+                const locked = !approved.has(date);
+                const showLockBadge = role != null && locked;
+
+                const inMonthBg = !inMonth
+                  ? {
+                      backgroundImage:
+                        "repeating-linear-gradient(135deg, transparent 0 6px, var(--color-paper-2) 6px 7px)",
+                    }
+                  : undefined;
+
+                const content = (
+                  <>
+                    <span
+                      className={clsx(
+                        "text-[12px] tabular-nums",
+                        inMonth ? "font-medium text-ink-2" : "text-ink-3",
+                      )}
+                    >
+                      {fmtDayShort(d)}
+                    </span>
+                    {showLockBadge && (
+                      <span
+                        className="absolute right-1 top-1 text-[10px] leading-none opacity-70"
+                        title="관리자 승인 대기(강사 입력 잠금)"
+                      >
+                        🔒
+                      </span>
+                    )}
+                    {available <= 0 ? (
+                      <span
+                        className="mt-auto text-[11px] font-medium text-ink-3"
+                        title="수업을 넣을 수 있는 시간이 없습니다"
+                      >
+                        ✕
+                      </span>
+                    ) : (
+                      <span className="mt-auto flex items-center gap-1">
+                        <span className="h-1 w-full overflow-hidden rounded-full bg-line">
+                          <span
+                            className="block h-full rounded-full bg-clay-soft"
+                            style={{ width: `${Math.min(100, pct * 100)}%` }}
+                          />
+                        </span>
+                        <span className="shrink-0 text-[9px] tabular-nums text-ink-3">
+                          {count}개
+                        </span>
+                      </span>
+                    )}
+                  </>
+                );
+
+                if (paintMode) {
+                  return (
+                    <div
+                      key={date}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        paintStart(date);
+                      }}
+                      onMouseEnter={() => paintEnter(date)}
+                      style={inMonthBg}
+                      className={clsx(
+                        "group relative flex min-h-[68px] flex-col gap-1 border-r px-2 py-1.5 last:border-r-0",
+                        !inMonth && "text-ink-3",
+                        preview.has(date) &&
+                          "outline outline-2 -outline-offset-2 outline-clay",
+                      )}
+                    >
+                      {content}
+                    </div>
+                  );
+                }
+                return (
+                  <Link
+                    key={date}
+                    href={`/day/${date}`}
+                    style={inMonthBg}
                     className={clsx(
-                      "text-[12px] tabular-nums",
-                      inMonth ? "font-medium text-ink-2" : "text-ink-3",
+                      "group relative flex min-h-[68px] flex-col gap-1 border-r px-2 py-1.5 transition-colors last:border-r-0 hover:bg-paper-2",
+                      !inMonth && "text-ink-3",
                     )}
                   >
-                    {fmtDayShort(d)}
-                  </span>
-                  {available <= 0 ? (
-                    <span
-                      className="mt-auto text-[11px] font-medium text-ink-3"
-                      title="수업을 넣을 수 있는 시간이 없습니다"
-                    >
-                      ✕
-                    </span>
-                  ) : (
-                    <span className="mt-auto flex items-center gap-1">
-                      <span className="h-1 w-full overflow-hidden rounded-full bg-line">
-                        <span
-                          className="block h-full rounded-full bg-clay-soft"
-                          style={{ width: `${Math.min(100, pct * 100)}%` }}
-                        />
-                      </span>
-                      <span className="shrink-0 text-[9px] tabular-nums text-ink-3">
-                        {count}개
-                      </span>
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        );
-      })}
+                    {content}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })}
+        </div>
       </div>
     </div>
   );

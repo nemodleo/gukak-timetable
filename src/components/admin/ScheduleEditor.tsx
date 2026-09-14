@@ -41,6 +41,7 @@ export function ScheduleEditor({
   initialCells,
   initialMemos,
   initialConfigs,
+  approvedDates,
   year,
   month,
   initialWeekKey,
@@ -54,6 +55,8 @@ export function ScheduleEditor({
   initialCells: Cell[];
   initialMemos: DayMemo[];
   initialConfigs: DayConfig[];
+  /** 관리자가 승인(오픈)한 날짜 — 없는 날짜는 기본 잠금(강사 입력 불가, 관리자는 무관) */
+  approvedDates: string[];
   year: number;
   month: number;
   /** lock the editor to a specific week (defaults to first week of year/month) */
@@ -87,6 +90,7 @@ export function ScheduleEditor({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [paint, setPaint] = useState(false);
+  const [approved, setApproved] = useState<Set<string>>(() => new Set(approvedDates));
   /** 칸 편집 되돌리기 스택 — 각 항목은 한 번의 편집(칸 여러 개 가능) */
   type UndoOp = { date: string; room: string; slot: number; before: Cell | null };
   const [undoStack, setUndoStack] = useState<UndoOp[][]>([]);
@@ -116,6 +120,30 @@ export function ScheduleEditor({
     setToast(m);
     setTimeout(() => setToast(null), 2200);
   };
+
+  /** 강사 입력 잠금 여부 — 관리자는 무관, 승인 안 된 날짜(기본값)만 잠김 */
+  const isDayLocked = (date: string) => !isAdmin && !approved.has(date);
+
+  /** 관리자 전용 — 이 날짜 하나를 승인/잠금 토글(월간 화면 드래그와 같은 API) */
+  async function toggleDayApproval(date: string) {
+    const next = !approved.has(date);
+    const res = await fetch("/api/day-approvals", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ dates: [date], approved: next }),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      flash(`저장 실패: ${j.error ?? res.status}`);
+      return;
+    }
+    setApproved((prev) => {
+      const n = new Set(prev);
+      if (next) n.add(date);
+      else n.delete(date);
+      return n;
+    });
+  }
 
   const effStruct = useCallback(
     (date: string): Struct => {
@@ -271,6 +299,7 @@ export function ScheduleEditor({
   // 그때그때 계산되므로 칸만 옮기면 통계·포화도가 저절로 다시 맞습니다.
   function canDragCell(cell: Cell | undefined): boolean {
     if (readOnly || !cell) return false;
+    if (isDayLocked(cell.date)) return false;
     return cell.kind === "block" || cell.active === false ? isAdmin : true;
   }
 
@@ -888,12 +917,17 @@ export function ScheduleEditor({
           {shownDays.map((d) => {
             const date = iso(d);
             const st = effStruct(date);
+            const locked = isDayLocked(date);
             return (
               <EditableDay
                 key={date}
                 date={date}
                 wide={Boolean(dayOnly)}
                 readOnly={readOnly}
+                locked={locked}
+                isApproved={approved.has(date)}
+                isAdmin={isAdmin}
+                onToggleApproval={isAdmin ? () => toggleDayApproval(date) : undefined}
                 canStruct={isAdmin && !readOnly}
                 struct={st}
                 hasOverride={serverCfg.has(date)}
@@ -903,7 +937,7 @@ export function ScheduleEditor({
                 pById={pById}
                 memoLines={memos.get(date) ?? EMPTY_MEMO_LINES}
                 onCellClick={
-                  readOnly
+                  readOnly || locked
                     ? undefined
                     : (room, slot) => {
                         // 비수업 칸·비활성 지정된 칸은 관리자만 수정 가능
@@ -912,7 +946,7 @@ export function ScheduleEditor({
                         setDraft({ date, room, slot });
                       }
                 }
-                onMemoChange={(hhmm, line) => changeMemo(date, hhmm, line)}
+                onMemoChange={locked ? undefined : (hhmm, line) => changeMemo(date, hhmm, line)}
                 onAddBlock={() => addBlock(date)}
                 onInsertBlock={(start, end) => insertBlock(date, start, end)}
                 onEditBlock={(i, patch) => editBlock(date, i, patch)}
@@ -927,7 +961,7 @@ export function ScheduleEditor({
                 paintMode={isAdmin && !readOnly && paint}
                 onPaint={(targets, value) => paintCells(targets, value, date)}
                 dnd={
-                  readOnly || paint
+                  readOnly || paint || locked
                     ? undefined
                     : {
                         canDrag: canDragCell,
@@ -999,6 +1033,10 @@ function EditableDay({
   date,
   wide,
   readOnly,
+  locked,
+  isApproved,
+  isAdmin,
+  onToggleApproval,
   canStruct,
   struct,
   hasOverride,
@@ -1027,6 +1065,13 @@ function EditableDay({
   date: string;
   wide?: boolean;
   readOnly?: boolean;
+  /** 강사 입력 잠금(관리자는 항상 false로 내려옴) */
+  locked?: boolean;
+  /** 잠금과 무관한 실제 승인 상태 — 관리자 배지/버튼용 */
+  isApproved?: boolean;
+  isAdmin?: boolean;
+  /** 관리자 전용 — 이 날짜 승인/잠금 토글 */
+  onToggleApproval?: () => void;
   canStruct?: boolean;
   struct: Struct;
   hasOverride: boolean;
@@ -1037,7 +1082,7 @@ function EditableDay({
   memoLines: Record<string, MemoLine>;
   onCellClick?: (room: string, slot: number) => void;
   dnd?: DnDCtl;
-  onMemoChange: (hhmm: string, line: MemoLine | null) => void;
+  onMemoChange?: (hhmm: string, line: MemoLine | null) => void;
   onAddBlock: () => void;
   onInsertBlock: (start: string, end: string) => void;
   onEditBlock: (i: number, patch: Partial<SlotDef>) => void;
@@ -1067,8 +1112,34 @@ function EditableDay({
         wide ? "w-full max-w-[920px]" : "w-[640px]",
       )}
     >
-      <header className="relative border-b bg-clay-wash/60 px-3.5 py-2">
+      <header className="relative flex items-center gap-2 border-b bg-clay-wash/60 px-3.5 py-2">
         <span className="font-serif text-[15px] font-medium">{fmtDayHeader(d)}</span>
+        {isAdmin && onToggleApproval ? (
+          <button
+            type="button"
+            onClick={onToggleApproval}
+            title={isApproved ? "클릭하여 다시 잠금" : "클릭하여 승인(강사 입력 허용)"}
+            data-no-capture
+            className={clsx(
+              "rounded-full border px-2 py-0.5 text-[10.5px] font-medium transition-colors",
+              isApproved
+                ? "border-line-strong text-ink-3 hover:bg-paper-2"
+                : "border-clay bg-clay-wash text-clay hover:bg-clay/10",
+            )}
+          >
+            {isApproved ? "🔓 승인됨" : "🔒 승인 대기"}
+          </button>
+        ) : (
+          locked && (
+            <span
+              className="rounded-full border border-line-strong px-2 py-0.5 text-[10.5px] font-medium text-ink-3"
+              title="관리자가 승인하기 전까지 강사는 편집할 수 없습니다"
+              data-no-capture
+            >
+              🔒 승인 대기
+            </span>
+          )
+        )}
         <div
           className="absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center gap-2"
           data-no-capture
@@ -1093,11 +1164,11 @@ function EditableDay({
         cellIndex={cells}
         pairings={pairings}
         memo={{
-          mode: readOnly ? "read" : "edit",
+          mode: readOnly || locked ? "read" : "edit",
           lines: memoLines,
           onChange: onMemoChange,
         }}
-        editable={!readOnly}
+        editable={!readOnly && !locked}
         rowH={wide ? 19 : 15}
         paintMode={paintMode}
         onCellClick={onCellClick}

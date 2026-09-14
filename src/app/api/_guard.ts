@@ -21,6 +21,28 @@ export async function requireEditor(): Promise<NextResponse | null> {
   return null;
 }
 
+/** admin bypasses; instructor is blocked if ANY of these dates isn't
+ *  approved (missing row = locked, the default). */
+export async function requireDaysApproved(dates: string[]): Promise<NextResponse | null> {
+  if (await isAdmin()) return null;
+  const uniq = [...new Set(dates)];
+  if (!uniq.length) return null;
+  const sb = supabaseServer();
+  if (!sb) return null; // demo mode — no DB, locks don't apply
+  const { data } = await sb
+    .from("day_approvals")
+    .select("date,approved")
+    .in("date", uniq);
+  const approved = new Set((data ?? []).filter((r) => r.approved).map((r) => r.date as string));
+  if (uniq.some((d) => !approved.has(d))) {
+    return NextResponse.json(
+      { error: "관리자가 아직 승인하지 않은 날짜입니다." },
+      { status: 403 },
+    );
+  }
+  return null;
+}
+
 export function requireDb():
   | { sb: SupabaseClient; res?: undefined }
   | { sb?: undefined; res: NextResponse } {

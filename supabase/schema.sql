@@ -63,6 +63,15 @@ create table if not exists public.day_configs (
   slots jsonb
 );
 
+-- per-date approval — default is locked (no row = locked); an admin "opens"
+-- a day by inserting/upserting approved=true. Instructors can view a locked
+-- day but not edit it (cells, drag-move, memos); admin is unaffected.
+create table if not exists public.day_approvals (
+  date       date primary key,
+  approved   boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
 -- reconcile pre-existing tables (safe to run repeatedly)
 -- ---------------------------------------------------------------------------
@@ -113,6 +122,12 @@ create unique index if not exists pairings_ym_label_key on public.pairings (ym, 
 alter table public.day_memos add column if not exists lines jsonb not null default '{}'::jsonb;
 alter table public.day_memos drop column if exists memos;
 
+-- day_approvals: 기본은 잠금이지만, 이 기능이 생기기 전부터 이미 데이터가 있던
+-- 날짜는 예외로 오픈 처리한다(1회성 이관 — 이미 존재하는 행은 건드리지 않음).
+insert into public.day_approvals (date, approved)
+select distinct date, true from public.schedule_cells
+on conflict (date) do nothing;
+
 -- seed the settings row
 insert into public.settings (id) values (1) on conflict (id) do nothing;
 
@@ -123,11 +138,12 @@ alter table public.pairings       enable row level security;
 alter table public.schedule_cells enable row level security;
 alter table public.day_memos      enable row level security;
 alter table public.day_configs    enable row level security;
+alter table public.day_approvals  enable row level security;
 
 do $$
 declare t text;
 begin
-  foreach t in array array['settings','pairings','schedule_cells','day_memos','day_configs'] loop
+  foreach t in array array['settings','pairings','schedule_cells','day_memos','day_configs','day_approvals'] loop
     execute format('drop policy if exists "public read %1$s" on public.%1$s', t);
     execute format('create policy "public read %1$s" on public.%1$s for select using (true)', t);
   end loop;

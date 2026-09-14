@@ -8,7 +8,7 @@ import {
   type Pairing,
   type Settings,
 } from "./types";
-import { iso, weeksOfMonth, ymKey, ymsInRange } from "./schedule";
+import { datesInRange, iso, weeksOfMonth, ymKey, ymsInRange } from "./schedule";
 import { normalizeMemo, normalizeSlots } from "./normalize";
 import {
   normalizeGradeColors,
@@ -150,12 +150,28 @@ export async function getDayConfigs(
   })) as DayConfig[];
 }
 
+/** dates approved for instructor editing in [from,to]. missing dates default
+ *  to locked (admin bypasses this everywhere it's checked). when Supabase
+ *  isn't configured (read-only demo), locks don't apply — treat every date
+ *  as approved so the demo is never confusingly stuck. */
+export async function getDayApprovals(from: string, to: string): Promise<Set<string>> {
+  const sb = supabaseServer();
+  if (!sb) return new Set(datesInRange(from, to));
+  const { data } = await sb
+    .from("day_approvals")
+    .select("date,approved")
+    .gte("date", from)
+    .lte("date", to);
+  return new Set((data ?? []).filter((r) => r.approved).map((r) => r.date as string));
+}
+
 export interface MonthData {
   settings: Settings;
   pairings: Pairing[];
   cells: Cell[];
   memos: DayMemo[];
   dayConfigs: DayConfig[];
+  approvedDates: string[];
   from: string;
   to: string;
 }
@@ -169,12 +185,22 @@ export async function getMonthData(
   const weeks = weeksOfMonth(year, month, settings.week_start);
   const from = iso(weeks[0].start);
   const to = iso(weeks[weeks.length - 1].end);
-  const [pairings, cells, memos, dayConfigs] = await Promise.all([
+  const [pairings, cells, memos, dayConfigs, approvals] = await Promise.all([
     // stats / calendar want THIS month's roster only (not spilled weeks')
     getPairings(ymKey(year, month)),
     getCells(from, to),
     getMemos(from, to),
     getDayConfigs(from, to),
+    getDayApprovals(from, to),
   ]);
-  return { settings, pairings, cells, memos, dayConfigs, from, to };
+  return {
+    settings,
+    pairings,
+    cells,
+    memos,
+    dayConfigs,
+    approvedDates: [...approvals],
+    from,
+    to,
+  };
 }

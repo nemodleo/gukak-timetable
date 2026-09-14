@@ -38,6 +38,7 @@ async function Tabs() {
       cells={data.cells}
       memos={data.memos}
       dayConfigs={data.dayConfigs}
+      approvedDates={data.approvedDates}
       year={base.year}
       month={base.month}
       role="admin"

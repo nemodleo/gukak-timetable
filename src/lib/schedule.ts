@@ -23,6 +23,18 @@ export function addDays(d: Date, n: number): Date {
   return x;
 }
 
+/** every ISO date from `from` to `to` inclusive. */
+export function datesInRange(from: string, to: string): string[] {
+  const out: string[] = [];
+  let d = parseIso(from);
+  const end = parseIso(to);
+  while (d <= end) {
+    out.push(iso(d));
+    d = addDays(d, 1);
+  }
+  return out;
+}
+
 const WD_KO = ["일", "월", "화", "수", "목", "금", "토"];
 
 export function weekdayKo(d: Date): string {

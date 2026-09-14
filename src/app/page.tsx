@@ -1,4 +1,5 @@
 import { getMonthData, getSettings } from "@/lib/data";
+import { getRole } from "@/lib/auth";
 import { iso, isInMonth, monthLabel, weeksOfMonth } from "@/lib/schedule";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { MonthCapture } from "@/components/MonthCapture";
@@ -22,7 +23,7 @@ export default async function HomePage({
   const y = Number(sp.y) || base.year;
   const m = Number(sp.m) || base.month;
 
-  const data = await getMonthData(y, m);
+  const [data, role] = await Promise.all([getMonthData(y, m), getRole()]);
   const weeks = weeksOfMonth(y, m, data.settings.week_start);
   const inMonthDates = weeks
     .flatMap((w) => w.days)
@@ -65,6 +66,8 @@ export default async function HomePage({
         cells={data.cells}
         settings={data.settings}
         dayConfigs={data.dayConfigs}
+        approvedDates={data.approvedDates}
+        role={role}
       />
 
       {!anyCells && (

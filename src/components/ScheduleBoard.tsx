@@ -14,6 +14,7 @@ interface EditorProps {
   initialCells: Cell[];
   initialMemos: DayMemo[];
   initialConfigs: DayConfig[];
+  approvedDates: string[];
   year: number;
   month: number;
   initialWeekKey?: string;

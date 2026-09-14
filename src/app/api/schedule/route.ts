@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
-import { requireAdmin, requireDb, requireEditor } from "../_guard";
+import { requireAdmin, requireDaysApproved, requireDb, requireEditor } from "../_guard";
 import { getCells } from "@/lib/data";
 
 // 칸 PUT: 배정(pairing) = 강사+관리자. 비수업(block) 칸의 생성/수정/삭제 = 관리자만.
 // 비활성 지정(active=false)도 관리자만 — 내용은 그대로 두고 강사 입력만 막는다.
+// 날짜가 관리자 승인(day_approvals) 전이면 강사는 아예 쓸 수 없다(관리자는 무관).
 // 날짜 전체 삭제(구조 재저장용) = 관리자만.
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,10 @@ export async function PUT(req: Request) {
 
   const body = await req.json();
   const list: InCell[] = Array.isArray(body) ? body : [body];
+
+  // 관리자가 승인(오픈)하지 않은 날짜 = 강사 입력 금지(관리자는 무관).
+  const dayUnauth = await requireDaysApproved(list.map((c) => c.date));
+  if (dayUnauth) return dayUnauth;
 
   // 비수업(block) 칸의 생성/수정, 비활성 지정/해제 자체 = 관리자만.
   // 이미 비활성 지정된 칸(내용 있는 배정 포함)의 수정도 관리자만.

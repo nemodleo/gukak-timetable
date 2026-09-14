@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   getCells,
+  getDayApprovals,
   getDayConfigs,
   getMemos,
   getPairingsForRange,
@@ -22,12 +23,13 @@ export default async function DayPage({
   const { date } = await params;
   const d = parseIso(date);
 
-  const [settings, pairings, cells, memos, dayConfigs, role] = await Promise.all([
+  const [settings, pairings, cells, memos, dayConfigs, approvals, role] = await Promise.all([
     getSettings(),
     getPairingsForRange(date, date),
     getCells(date, date),
     getMemos(date, date),
     getDayConfigs(date, date),
+    getDayApprovals(date, date),
     getRole(),
   ]);
 
@@ -62,6 +64,7 @@ export default async function DayPage({
         initialCells={cells}
         initialMemos={memos}
         initialConfigs={dayConfigs}
+        approvedDates={[...approvals]}
         year={settings.year}
         month={settings.month}
         initialWeekKey={weekKey}
