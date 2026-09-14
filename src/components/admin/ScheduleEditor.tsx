@@ -46,6 +46,7 @@ export function ScheduleEditor({
   dayOnly,
   isAdmin = false,
   readOnly = false,
+  viewToggle,
 }: {
   settings: Settings;
   pairings: Pairing[];
@@ -62,6 +63,8 @@ export function ScheduleEditor({
   isAdmin?: boolean;
   /** 학생 보기 모드 — no editing at all */
   readOnly?: boolean;
+  /** 보기/편집 토글 (ScheduleBoard가 렌더) — 툴바 맨 앞에 한 줄로 같이 배치 */
+  viewToggle?: React.ReactNode;
 }) {
   const firstWeekKey =
     initialWeekKey ??
@@ -646,24 +649,25 @@ export function ScheduleEditor({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div className="flex items-center gap-2">
+      <div className="overflow-x-auto scroll-thin">
+        <div className="flex flex-nowrap items-center gap-2 py-0.5">
+          {viewToggle}
           {!embedded && !dayOnly && (
-            <span className="flex items-center gap-1">
+            <span className="flex shrink-0 items-center gap-1">
               <button
                 type="button"
                 onClick={() => setWeekKey(iso(addDays(week.start, -7)))}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-line-strong text-ink-2 hover:bg-paper-2"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line-strong text-ink-2 hover:bg-paper-2"
               >
                 ‹
               </button>
-              <span className="min-w-[168px] text-center text-[13px] font-medium tabular-nums text-ink-2">
+              <span className="min-w-[168px] shrink-0 whitespace-nowrap text-center text-[13px] font-medium tabular-nums text-ink-2">
                 {iso(week.start)} ~ {iso(week.end)}
               </span>
               <button
                 type="button"
                 onClick={() => setWeekKey(iso(addDays(week.start, 7)))}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-line-strong text-ink-2 hover:bg-paper-2"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line-strong text-ink-2 hover:bg-paper-2"
               >
                 ›
               </button>
@@ -674,7 +678,7 @@ export function ScheduleEditor({
               type="button"
               onClick={() => setPaint((p) => !p)}
               className={clsx(
-                "rounded-full border px-3 py-1.5 text-[12px] transition-colors",
+                "shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] transition-colors",
                 paint
                   ? "border-clay bg-clay text-paper"
                   : "border-line-strong text-ink-2 hover:bg-paper-2",
@@ -689,26 +693,26 @@ export function ScheduleEditor({
               onClick={() => undo()}
               disabled={undoStack.length === 0}
               title="이전 (⌘/Ctrl+Z)"
-              className="rounded-full border border-line-strong px-3 py-1.5 text-[12px] text-ink-2 transition-colors hover:bg-paper-2 disabled:opacity-40"
+              className="shrink-0 whitespace-nowrap rounded-full border border-line-strong px-3 py-1.5 text-[12px] text-ink-2 transition-colors hover:bg-paper-2 disabled:opacity-40"
             >
               ↶ 이전
             </button>
           )}
-        </div>
 
-        <div className="flex gap-2">
-          <DayCapture
-            days={shownDays.map((d) => {
-              const date = iso(d);
-              const s = effStruct(date);
-              return { date, rooms: s.rooms, slots: s.slots };
-            })}
-            zipName={`week-${weekKey}.zip`}
-            label={shownDays.length > 1 ? "주 전체 저장 (zip)" : "이미지 저장"}
-            pairings={pairings}
-            cells={[...cells.values()]}
-            memos={[...memos].map(([date, lines]) => ({ date, lines }))}
-          />
+          <div className="shrink-0">
+            <DayCapture
+              days={shownDays.map((d) => {
+                const date = iso(d);
+                const s = effStruct(date);
+                return { date, rooms: s.rooms, slots: s.slots };
+              })}
+              zipName={`week-${weekKey}.zip`}
+              label={shownDays.length > 1 ? "주 전체 저장 (zip)" : "이미지 저장"}
+              pairings={pairings}
+              cells={[...cells.values()]}
+              memos={[...memos].map(([date, lines]) => ({ date, lines }))}
+            />
+          </div>
         </div>
       </div>
 

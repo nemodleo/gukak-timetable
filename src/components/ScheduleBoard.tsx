@@ -40,30 +40,32 @@ export function ScheduleBoard({
       )}
     >
       <div className="min-w-0 space-y-3 lg:flex-1">
-        {loggedIn && (
-          <div className="flex flex-wrap items-center gap-2 text-[13px]" data-no-capture>
-            <div className="flex gap-1 rounded-full border bg-paper p-1">
-              {(["view", "edit"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  className={clsx(
-                    "rounded-full px-3.5 py-1.5 transition-colors",
-                    mode === m ? "bg-ink text-paper" : "text-ink-2 hover:bg-paper-2",
-                  )}
-                >
-                  {m === "view" ? "보기" : "편집"}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         <ScheduleEditor
           {...editorProps}
           isAdmin={isAdmin}
           readOnly={mode === "view" || !loggedIn}
+          viewToggle={
+            loggedIn && (
+              <div
+                className="flex shrink-0 gap-1 rounded-full border bg-paper p-1 text-[13px]"
+                data-no-capture
+              >
+                {(["view", "edit"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    className={clsx(
+                      "whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors",
+                      mode === m ? "bg-ink text-paper" : "text-ink-2 hover:bg-paper-2",
+                    )}
+                  >
+                    {m === "view" ? "보기" : "편집"}
+                  </button>
+                ))}
+              </div>
+            )
+          }
         />
       </div>
 
