@@ -19,6 +19,7 @@ import {
   parseIso,
   roomsForDate,
   slotsForDate,
+  sortSlots,
   startOfWeekKey,
   weekFromKey,
   ymOf,
@@ -498,6 +499,57 @@ export function ScheduleEditor({
     setStructFor(date, { rooms, slots: s.slots });
   }
 
+  /** drag a time block's label onto an empty gap — reschedules the block
+   *  (duration preserved) instead of reordering its array position, since
+   *  the grid places blocks by clock time via gridGeom, not array order.
+   *  cells reference blocks by slot_index, so re-sorting the slots array
+   *  after the move requires remapping every affected cell's slot_index. */
+  function moveBlock(date: string, from: number, newStart: string) {
+    const s = effStruct(date);
+    const slot = s.slots[from];
+    if (!slot) return;
+    const duration = toMin(slot.end) - toMin(slot.start);
+    let startC = toMin(newStart);
+    let endC = startC + duration;
+    if (endC > DAY_MAX) {
+      endC = DAY_MAX;
+      startC = endC - duration;
+    }
+    if (startC < 0) return;
+
+    const overlaps = s.slots.some((other, i) => {
+      if (i === from) return false;
+      return startC < toMin(other.end) && endC > toMin(other.start);
+    });
+    if (overlaps) {
+      flash("다른 시간대와 겹쳐서 이동할 수 없습니다");
+      return;
+    }
+
+    const updatedSlots = s.slots.map((sl, i) =>
+      i === from ? { ...sl, start: fromMin(startC), end: fromMin(endC) } : sl,
+    );
+    const sorted = sortSlots(updatedSlots);
+    // old index -> new index, via each slot's identity (object reference
+    // survives the sort/map above, so match by reference).
+    const newIndexOf = new Map(sorted.map((sl, newI) => [sl, newI]));
+    const perm = updatedSlots.map((sl) => newIndexOf.get(sl)!);
+
+    setStructFor(date, { rooms: s.rooms, slots: sorted }, (m) => {
+      const moved: Array<{ key: string; cell: Cell }> = [];
+      for (const [k, c] of [...m]) {
+        if (c.date !== date || c.slot_index >= perm.length) continue;
+        const newIdx = perm[c.slot_index];
+        if (newIdx === c.slot_index) continue;
+        m.delete(k);
+        moved.push({ key: k, cell: { ...c, slot_index: newIdx } });
+      }
+      for (const { cell } of moved) {
+        m.set(keyOf(cell.date, cell.room, cell.slot_index), cell);
+      }
+    });
+  }
+
   function editRoom(date: string, i: number, name: string) {
     const s = effStruct(date);
     const old = s.rooms[i];
@@ -773,6 +825,7 @@ export function ScheduleEditor({
                 onEditRoom={(i, name) => editRoom(date, i, name)}
                 onDeleteRoom={(i) => deleteRoom(date, i)}
                 onReorderRoom={(from, to) => reorderRoom(date, from, to)}
+                onMoveBlock={(from, newStart) => moveBlock(date, from, newStart)}
                 onResetStruct={() => resetStruct(date)}
                 paintMode={isAdmin && !readOnly && paint}
                 onPaint={(targets, value) => paintCells(targets, value, date)}
@@ -867,6 +920,7 @@ function EditableDay({
   onEditRoom,
   onDeleteRoom,
   onReorderRoom,
+  onMoveBlock,
   onResetStruct,
   paintMode,
   onPaint,
@@ -894,6 +948,7 @@ function EditableDay({
   onEditRoom: (i: number, name: string) => void;
   onDeleteRoom: (i: number) => void;
   onReorderRoom: (from: number, to: number) => void;
+  onMoveBlock: (from: number, newStart: string) => void;
   onResetStruct: () => void;
   paintMode: boolean;
   onPaint: (targets: { room: string; slot: number }[], value: "block" | "clear") => void;
@@ -957,6 +1012,7 @@ function EditableDay({
                 onDeleteBlock,
                 onAddBlock,
                 onInsertBlock,
+                onMoveBlock,
               }
             : undefined
         }

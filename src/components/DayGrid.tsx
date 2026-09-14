@@ -38,6 +38,8 @@ export interface StructEdit {
   onDeleteBlock: (i: number) => void;
   onAddBlock: () => void;
   onInsertBlock: (start: string, end: string) => void;
+  /** drag a time block's label onto an empty gap to reschedule it (duration preserved) */
+  onMoveBlock: (from: number, newStart: string) => void;
 }
 
 /** drag-to-move a cell's assignment to another room/time (optionally another day) */
@@ -135,12 +137,16 @@ export function DayGrid({
     return () => window.removeEventListener("mouseup", up);
   }, [paintMode, onPaint]);
 
-  /* ---- drag-reorder room headers (columns have no inherent order; time
-   *  blocks are positioned by clock time via gridGeom, so reordering their
-   *  array has no visual effect and isn't offered here) ---- */
+  /* ---- drag-reorder room headers (columns have no inherent order) ---- */
   const [roomDrag, setRoomDrag] = useState<{ from: number; over: number | null } | null>(
     null,
   );
+
+  /* ---- drag a time block to a new (empty) time — duration preserved.
+   *  the grid places blocks by clock time, so this drags vertically onto
+   *  an empty gap rather than reordering the underlying array. ---- */
+  const [blockDragFrom, setBlockDragFrom] = useState<number | null>(null);
+  const [blockDragOverGap, setBlockDragOverGap] = useState<number | null>(null);
 
   const pkey = (room: string, s: number) => `${room} ${s}`;
   const paintStart = (room: string, s: number) => {
@@ -253,15 +259,54 @@ export function DayGrid({
           ) : null,
         )}
 
-        {/* empty / deleted time bands — hover to add a block here */}
+        {/* empty / deleted time bands — hover to add a block, or drop a
+            dragged block here to move it (start snaps to the gap's start,
+            duration is preserved) */}
         {showStruct &&
           gaps.map((g, k) => (
             <button
               key={`gap-${k}`}
               type="button"
-              title="이 시간에 블록 추가"
-              onClick={() => structEdit!.onInsertBlock(markAt(g.from), markAt(g.to))}
-              className="group/gap z-20 flex items-center justify-center bg-transparent hover:bg-clay-wash/70"
+              title={
+                blockDragFrom != null
+                  ? "여기로 이동"
+                  : "이 시간에 블록 추가"
+              }
+              onClick={() => {
+                if (blockDragFrom != null) return; // drag/drop only, not a click
+                structEdit!.onInsertBlock(markAt(g.from), markAt(g.to));
+              }}
+              draggable={false}
+              onDragOver={
+                blockDragFrom != null
+                  ? (e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (blockDragOverGap !== k) setBlockDragOverGap(k);
+                    }
+                  : undefined
+              }
+              onDragLeave={
+                blockDragFrom != null
+                  ? () => setBlockDragOverGap((v) => (v === k ? null : v))
+                  : undefined
+              }
+              onDrop={
+                blockDragFrom != null
+                  ? (e) => {
+                      e.preventDefault();
+                      structEdit!.onMoveBlock(blockDragFrom, markAt(g.from));
+                      setBlockDragFrom(null);
+                      setBlockDragOverGap(null);
+                    }
+                  : undefined
+              }
+              className={clsx(
+                "group/gap z-20 flex items-center justify-center bg-transparent hover:bg-clay-wash/70",
+                blockDragFrom != null &&
+                  blockDragOverGap === k &&
+                  "outline outline-2 -outline-offset-2 outline-clay",
+              )}
               style={{
                 gridColumn: `1 / ${plusCol}`,
                 gridRow: `${g.from + 1} / span ${g.to - g.from}`,
@@ -284,6 +329,12 @@ export function DayGrid({
               onRetime={(patch) => structEdit!.onRetimeBlock(si, patch)}
               onDelete={() => structEdit!.onDeleteBlock(si)}
               style={{ gridColumn: "1", gridRow: `${row + 1} / span ${span}` }}
+              isDragging={blockDragFrom === si}
+              onDragStart={() => setBlockDragFrom(si)}
+              onDragEndLabel={() => {
+                setBlockDragFrom(null);
+                setBlockDragOverGap(null);
+              }}
             />
           );
         })}
@@ -526,12 +577,18 @@ function BlockLabel({
   onRetime,
   onDelete,
   style,
+  isDragging,
+  onDragStart,
+  onDragEndLabel,
 }: {
   slot: SlotDef;
   editable: boolean;
   onRetime: (patch: Partial<SlotDef>) => void;
   onDelete: () => void;
   style: React.CSSProperties;
+  isDragging?: boolean;
+  onDragStart?: () => void;
+  onDragEndLabel?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const compact = durationH(slot.start, slot.end) < 1.5; // short block -> single line
@@ -542,8 +599,13 @@ function BlockLabel({
         "group relative flex flex-col items-center justify-center border-b border-r bg-paper px-0.5 text-center",
         editing ? "z-40 gap-0.5 overflow-visible" : "z-20 overflow-hidden",
         !editing && "text-[9.5px] font-medium leading-[1.1] tabular-nums text-ink-3",
+        isDragging && "opacity-40",
       )}
       style={style}
+      draggable={editable && !editing}
+      title={editable && !editing ? "드래그해서 다른(빈) 시간으로 이동" : undefined}
+      onDragStart={editable && !editing ? onDragStart : undefined}
+      onDragEnd={editable && !editing ? onDragEndLabel : undefined}
       onBlur={(e) => {
         // time change auto-confirms; close when focus leaves the editor
         if (editing && !e.currentTarget.contains(e.relatedTarget as Node)) {
