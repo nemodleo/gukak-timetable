@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { requireAdmin, requireDb } from "../_guard";
 import { getSettings } from "@/lib/data";
 import { DEFAULT_SETTINGS } from "@/lib/types";
-import { normalizeGradeColors, normalizeInactiveColor, normalizeInactivePattern } from "@/lib/colors";
+import {
+  normalizeGradeColors,
+  normalizeInactiveBgColor,
+  normalizeInactivePattern,
+  normalizeInactivePatternColor,
+} from "@/lib/colors";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +35,8 @@ export async function PUT(req: Request) {
       time_slots_weekday: merged.time_slots_weekday,
       time_slots_weekend: merged.time_slots_weekend,
       grade_colors: normalizeGradeColors(merged.grade_colors),
-      inactive_color: normalizeInactiveColor(merged.inactive_color),
+      inactive_bg_color: normalizeInactiveBgColor(merged.inactive_bg_color),
+      inactive_pattern_color: normalizeInactivePatternColor(merged.inactive_pattern_color),
       inactive_pattern: normalizeInactivePattern(merged.inactive_pattern),
       updated_at: new Date().toISOString(),
     });

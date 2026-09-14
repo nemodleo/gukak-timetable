@@ -14,8 +14,9 @@ create table if not exists public.settings (
   time_slots_weekday jsonb not null default '[]'::jsonb,
   time_slots_weekend jsonb not null default '[]'::jsonb,
   grade_colors       jsonb not null default '{"g1":"#ffe599","g2":"#ea9999","g3":"#b6d7a8","gm":"#a4c2f4"}'::jsonb,
-  inactive_color     text  not null default '#c7bba6',
-  inactive_pattern   text  not null default 'hatch' check (inactive_pattern in ('hatch','cross','dots','solid')),
+  inactive_bg_color      text not null default '#f3efe9',
+  inactive_pattern_color text not null default '#c7bba6',
+  inactive_pattern       text not null default 'hatch' check (inactive_pattern in ('hatch','cross','dots','solid')),
   updated_at         timestamptz not null default now(),
   constraint settings_singleton check (id = 1)
 );
@@ -69,12 +70,24 @@ create table if not exists public.day_configs (
 alter table public.settings add column if not exists grade_colors jsonb
   not null default '{"g1":"#ffe599","g2":"#ea9999","g3":"#b6d7a8","gm":"#a4c2f4"}'::jsonb;
 
--- settings: 비활성 칸 색·무늬도 관리자 설정에서 고를 수 있게
-alter table public.settings add column if not exists inactive_color text not null default '#c7bba6';
+-- settings: 비활성 칸 색·무늬도 관리자 설정에서 고를 수 있게 (배경색 + 패턴색 2가지)
+alter table public.settings add column if not exists inactive_bg_color text not null default '#f3efe9';
+alter table public.settings add column if not exists inactive_pattern_color text not null default '#c7bba6';
 alter table public.settings add column if not exists inactive_pattern text not null default 'hatch';
 alter table public.settings drop constraint if exists settings_inactive_pattern_check;
 alter table public.settings
   add constraint settings_inactive_pattern_check check (inactive_pattern in ('hatch','cross','dots','solid'));
+-- 예전 단일 inactive_color 컬럼(있다면)을 새 inactive_pattern_color로 이어받고 정리
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'settings' and column_name = 'inactive_color'
+  ) then
+    update public.settings set inactive_pattern_color = inactive_color where inactive_color is not null;
+    alter table public.settings drop column inactive_color;
+  end if;
+end $$;
 
 -- schedule_cells: 직접입력(text)을 비수업(block)으로 통합 — 셀 상태 = 비어있음/pairing/block
 alter table public.schedule_cells add column if not exists color text;

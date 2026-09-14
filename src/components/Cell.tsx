@@ -30,7 +30,11 @@ export function CellBody({
         style={
           cell.color
             ? { background: blockCellBg[cell.color] }
-            : inactiveBackgroundStyle(inactiveStyle.pattern, inactiveStyle.color)
+            : inactiveBackgroundStyle(
+                inactiveStyle.pattern,
+                inactiveStyle.bgColor,
+                inactiveStyle.patternColor,
+              )
         }
       >
         {cell.text}
@@ -51,7 +55,11 @@ export function CellBody({
         )}
         style={
           inactive
-            ? inactiveBackgroundStyle(inactiveStyle.pattern, inactiveStyle.color)
+            ? inactiveBackgroundStyle(
+                inactiveStyle.pattern,
+                inactiveStyle.bgColor,
+                inactiveStyle.patternColor,
+              )
             : { background: cellBg[gk] }
         }
       >

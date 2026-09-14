@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { GradeColors, InactivePattern, Settings, SlotDef } from "@/lib/types";
-import { DEFAULT_GRADE_COLORS, DEFAULT_INACTIVE_COLOR, DEFAULT_INACTIVE_PATTERN } from "@/lib/types";
+import {
+  DEFAULT_GRADE_COLORS,
+  DEFAULT_INACTIVE_BG_COLOR,
+  DEFAULT_INACTIVE_PATTERN,
+  DEFAULT_INACTIVE_PATTERN_COLOR,
+} from "@/lib/types";
 import { INACTIVE_PATTERN_OPTIONS, inactiveBackgroundStyle } from "@/lib/colors";
 import { SectionTitle } from "../ui";
 
@@ -62,15 +67,50 @@ function GradeColorPicker({
   );
 }
 
+function InactiveColorInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 rounded-md border border-line-strong px-2.5 py-2">
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-7 w-7 shrink-0 cursor-pointer rounded border border-line-strong bg-transparent p-0"
+      />
+      <span className="min-w-0">
+        <span className="block text-[12px] text-ink-2">{label}</span>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-20 bg-transparent text-[11px] tabular-nums text-ink-3 outline-none"
+          maxLength={7}
+          spellCheck={false}
+        />
+      </span>
+    </label>
+  );
+}
+
 function InactiveStylePicker({
-  color,
+  bgColor,
+  patternColor,
   pattern,
-  onChangeColor,
+  onChangeBgColor,
+  onChangePatternColor,
   onChangePattern,
 }: {
-  color: string;
+  bgColor: string;
+  patternColor: string;
   pattern: InactivePattern;
-  onChangeColor: (v: string) => void;
+  onChangeBgColor: (v: string) => void;
+  onChangePatternColor: (v: string) => void;
   onChangePattern: (v: InactivePattern) => void;
 }) {
   return (
@@ -81,7 +121,8 @@ function InactiveStylePicker({
           type="button"
           className="font-normal normal-case tracking-normal text-clay hover:underline"
           onClick={() => {
-            onChangeColor(DEFAULT_INACTIVE_COLOR);
+            onChangeBgColor(DEFAULT_INACTIVE_BG_COLOR);
+            onChangePatternColor(DEFAULT_INACTIVE_PATTERN_COLOR);
             onChangePattern(DEFAULT_INACTIVE_PATTERN);
           }}
         >
@@ -89,24 +130,8 @@ function InactiveStylePicker({
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 rounded-md border border-line-strong px-2.5 py-2">
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => onChangeColor(e.target.value)}
-            className="h-7 w-7 shrink-0 cursor-pointer rounded border border-line-strong bg-transparent p-0"
-          />
-          <span className="min-w-0">
-            <span className="block text-[12px] text-ink-2">색</span>
-            <input
-              value={color}
-              onChange={(e) => onChangeColor(e.target.value)}
-              className="w-20 bg-transparent text-[11px] tabular-nums text-ink-3 outline-none"
-              maxLength={7}
-              spellCheck={false}
-            />
-          </span>
-        </label>
+        <InactiveColorInput label="배경색" value={bgColor} onChange={onChangeBgColor} />
+        <InactiveColorInput label="패턴색" value={patternColor} onChange={onChangePatternColor} />
         <div className="flex flex-wrap gap-1.5">
           {INACTIVE_PATTERN_OPTIONS.map((opt) => (
             <button
@@ -123,7 +148,7 @@ function InactiveStylePicker({
             >
               <span
                 className="h-6 w-10 rounded border border-line-strong"
-                style={inactiveBackgroundStyle(opt.key, color)}
+                style={inactiveBackgroundStyle(opt.key, bgColor, patternColor)}
               />
               {opt.label}
             </button>
@@ -298,9 +323,11 @@ export function SettingsForm({ initial }: { initial: Settings }) {
       />
 
       <InactiveStylePicker
-        color={s.inactive_color ?? DEFAULT_INACTIVE_COLOR}
+        bgColor={s.inactive_bg_color ?? DEFAULT_INACTIVE_BG_COLOR}
+        patternColor={s.inactive_pattern_color ?? DEFAULT_INACTIVE_PATTERN_COLOR}
         pattern={s.inactive_pattern ?? DEFAULT_INACTIVE_PATTERN}
-        onChangeColor={(v) => setS({ ...s, inactive_color: v })}
+        onChangeBgColor={(v) => setS({ ...s, inactive_bg_color: v })}
+        onChangePatternColor={(v) => setS({ ...s, inactive_pattern_color: v })}
         onChangePattern={(v) => setS({ ...s, inactive_pattern: v })}
       />
 

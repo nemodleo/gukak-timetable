@@ -3,7 +3,12 @@ import "./globals.css";
 import { getRole } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
 import { hasSupabase } from "@/lib/supabaseServer";
-import { DEFAULT_GRADE_COLORS, DEFAULT_INACTIVE_COLOR, DEFAULT_INACTIVE_PATTERN } from "@/lib/types";
+import {
+  DEFAULT_GRADE_COLORS,
+  DEFAULT_INACTIVE_BG_COLOR,
+  DEFAULT_INACTIVE_PATTERN,
+  DEFAULT_INACTIVE_PATTERN_COLOR,
+} from "@/lib/types";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { InactiveStyleProvider } from "@/lib/inactiveStyleContext";
@@ -36,7 +41,8 @@ export default async function RootLayout({
     "--color-gm-badge": gc.gm,
   } as React.CSSProperties;
   const inactiveStyle = {
-    color: settings?.inactive_color ?? DEFAULT_INACTIVE_COLOR,
+    bgColor: settings?.inactive_bg_color ?? DEFAULT_INACTIVE_BG_COLOR,
+    patternColor: settings?.inactive_pattern_color ?? DEFAULT_INACTIVE_PATTERN_COLOR,
     pattern: settings?.inactive_pattern ?? DEFAULT_INACTIVE_PATTERN,
   };
   return (

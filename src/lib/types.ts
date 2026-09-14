@@ -29,8 +29,10 @@ export interface Settings {
   time_slots_weekday: SlotDef[];
   time_slots_weekend: SlotDef[];
   grade_colors: GradeColors;
-  /** 비활성 칸 색 — hex 문자열 ("#rrggbb"). */
-  inactive_color: string;
+  /** 비활성 칸의 두 색 — 배경색(무늬 사이 여백)과 패턴색(선·점, solid일 땐
+   *  칸 전체를 채우는 색). 둘 다 hex 문자열 ("#rrggbb"). */
+  inactive_bg_color: string;
+  inactive_pattern_color: string;
   inactive_pattern: InactivePattern;
 }
 
@@ -112,7 +114,8 @@ export const DEFAULT_GRADE_COLORS: GradeColors = {
   gm: "#a4c2f4",
 };
 
-export const DEFAULT_INACTIVE_COLOR = "#c7bba6";
+export const DEFAULT_INACTIVE_BG_COLOR = "#f3efe9"; // == --color-paper-2
+export const DEFAULT_INACTIVE_PATTERN_COLOR = "#c7bba6";
 export const DEFAULT_INACTIVE_PATTERN: InactivePattern = "hatch";
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -143,6 +146,7 @@ export const DEFAULT_SETTINGS: Settings = {
     { start: "17:00", end: "18:00" },
   ],
   grade_colors: DEFAULT_GRADE_COLORS,
-  inactive_color: DEFAULT_INACTIVE_COLOR,
+  inactive_bg_color: DEFAULT_INACTIVE_BG_COLOR,
+  inactive_pattern_color: DEFAULT_INACTIVE_PATTERN_COLOR,
   inactive_pattern: DEFAULT_INACTIVE_PATTERN,
 };

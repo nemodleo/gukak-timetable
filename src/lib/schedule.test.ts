@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_GRADE_COLORS,
-  DEFAULT_INACTIVE_COLOR,
+  DEFAULT_INACTIVE_BG_COLOR,
   DEFAULT_INACTIVE_PATTERN,
+  DEFAULT_INACTIVE_PATTERN_COLOR,
   type DayConfig,
   type Settings,
 } from "./types";
@@ -37,7 +38,8 @@ const settings: Settings = {
   ],
   time_slots_weekend: [{ start: "09:00", end: "11:00" }],
   grade_colors: DEFAULT_GRADE_COLORS,
-  inactive_color: DEFAULT_INACTIVE_COLOR,
+  inactive_bg_color: DEFAULT_INACTIVE_BG_COLOR,
+  inactive_pattern_color: DEFAULT_INACTIVE_PATTERN_COLOR,
   inactive_pattern: DEFAULT_INACTIVE_PATTERN,
 };
 
