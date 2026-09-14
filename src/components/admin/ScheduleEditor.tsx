@@ -504,6 +504,32 @@ export function ScheduleEditor({
    *  the grid places blocks by clock time via gridGeom, not array order.
    *  cells reference blocks by slot_index, so re-sorting the slots array
    *  after the move requires remapping every affected cell's slot_index. */
+  /** shared tail for any structural edit that changes one or more slots'
+   *  start/end times: sorts the updated slots by their new start time and
+   *  remaps every affected cell's slot_index from its old array position
+   *  to its new one (cells reference blocks positionally, unlike rooms). */
+  function commitSlotTimes(date: string, rooms: string[], updatedSlots: SlotDef[]) {
+    const sorted = sortSlots(updatedSlots);
+    // old index -> new index, via each slot's identity (object reference
+    // survives the sort/map above, so match by reference).
+    const newIndexOf = new Map(sorted.map((sl, newI) => [sl, newI]));
+    const perm = updatedSlots.map((sl) => newIndexOf.get(sl)!);
+
+    setStructFor(date, { rooms, slots: sorted }, (m) => {
+      const moved: Array<{ key: string; cell: Cell }> = [];
+      for (const [k, c] of [...m]) {
+        if (c.date !== date || c.slot_index >= perm.length) continue;
+        const newIdx = perm[c.slot_index];
+        if (newIdx === c.slot_index) continue;
+        m.delete(k);
+        moved.push({ key: k, cell: { ...c, slot_index: newIdx } });
+      }
+      for (const { cell } of moved) {
+        m.set(keyOf(cell.date, cell.room, cell.slot_index), cell);
+      }
+    });
+  }
+
   function moveBlock(date: string, from: number, newStart: string) {
     const s = effStruct(date);
     const slot = s.slots[from];
@@ -529,25 +555,41 @@ export function ScheduleEditor({
     const updatedSlots = s.slots.map((sl, i) =>
       i === from ? { ...sl, start: fromMin(startC), end: fromMin(endC) } : sl,
     );
-    const sorted = sortSlots(updatedSlots);
-    // old index -> new index, via each slot's identity (object reference
-    // survives the sort/map above, so match by reference).
-    const newIndexOf = new Map(sorted.map((sl, newI) => [sl, newI]));
-    const perm = updatedSlots.map((sl) => newIndexOf.get(sl)!);
+    commitSlotTimes(date, s.rooms, updatedSlots);
+  }
 
-    setStructFor(date, { rooms: s.rooms, slots: sorted }, (m) => {
-      const moved: Array<{ key: string; cell: Cell }> = [];
-      for (const [k, c] of [...m]) {
-        if (c.date !== date || c.slot_index >= perm.length) continue;
-        const newIdx = perm[c.slot_index];
-        if (newIdx === c.slot_index) continue;
-        m.delete(k);
-        moved.push({ key: k, cell: { ...c, slot_index: newIdx } });
-      }
-      for (const { cell } of moved) {
-        m.set(keyOf(cell.date, cell.room, cell.slot_index), cell);
-      }
-    });
+  /** drag a time block's label onto ANOTHER block (not just an empty gap)
+   *  — swaps the two blocks' times, each keeping its own duration. This is
+   *  what makes every row a valid drop target, matching room-header drag
+   *  (any other header always works) instead of relying on empty gaps,
+   *  which rarely exist in a fully-booked real schedule. */
+  function swapBlock(date: string, from: number, to: number) {
+    const s = effStruct(date);
+    if (from === to || from < 0 || to < 0 || from >= s.slots.length || to >= s.slots.length)
+      return;
+    const a = s.slots[from];
+    const b = s.slots[to];
+    const durA = toMin(a.end) - toMin(a.start);
+    const durB = toMin(b.end) - toMin(b.start);
+    const newAEnd = toMin(b.start) + durA;
+    const newBEnd = toMin(a.start) + durB;
+    if (newAEnd > DAY_MAX || newBEnd > DAY_MAX) {
+      flash("다른 시간대와 겹쳐서 이동할 수 없습니다");
+      return;
+    }
+    const newA: SlotDef = { ...a, start: b.start, end: fromMin(newAEnd) };
+    const newB: SlotDef = { ...b, start: a.start, end: fromMin(newBEnd) };
+
+    const others = s.slots.filter((_, i) => i !== from && i !== to);
+    const overlapsOthers = (slot: SlotDef) =>
+      others.some((o) => toMin(slot.start) < toMin(o.end) && toMin(slot.end) > toMin(o.start));
+    if (overlapsOthers(newA) || overlapsOthers(newB)) {
+      flash("다른 시간대와 겹쳐서 이동할 수 없습니다");
+      return;
+    }
+
+    const updatedSlots = s.slots.map((sl, i) => (i === from ? newA : i === to ? newB : sl));
+    commitSlotTimes(date, s.rooms, updatedSlots);
   }
 
   function editRoom(date: string, i: number, name: string) {
@@ -826,6 +868,7 @@ export function ScheduleEditor({
                 onDeleteRoom={(i) => deleteRoom(date, i)}
                 onReorderRoom={(from, to) => reorderRoom(date, from, to)}
                 onMoveBlock={(from, newStart) => moveBlock(date, from, newStart)}
+                onSwapBlock={(from, to) => swapBlock(date, from, to)}
                 onResetStruct={() => resetStruct(date)}
                 paintMode={isAdmin && !readOnly && paint}
                 onPaint={(targets, value) => paintCells(targets, value, date)}
@@ -921,6 +964,7 @@ function EditableDay({
   onDeleteRoom,
   onReorderRoom,
   onMoveBlock,
+  onSwapBlock,
   onResetStruct,
   paintMode,
   onPaint,
@@ -949,6 +993,7 @@ function EditableDay({
   onDeleteRoom: (i: number) => void;
   onReorderRoom: (from: number, to: number) => void;
   onMoveBlock: (from: number, newStart: string) => void;
+  onSwapBlock: (from: number, to: number) => void;
   onResetStruct: () => void;
   paintMode: boolean;
   onPaint: (targets: { room: string; slot: number }[], value: "block" | "clear") => void;
@@ -1013,6 +1058,7 @@ function EditableDay({
                 onAddBlock,
                 onInsertBlock,
                 onMoveBlock,
+                onSwapBlock,
               }
             : undefined
         }

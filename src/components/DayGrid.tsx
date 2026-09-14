@@ -40,6 +40,11 @@ export interface StructEdit {
   onInsertBlock: (start: string, end: string) => void;
   /** drag a time block's label onto an empty gap to reschedule it (duration preserved) */
   onMoveBlock: (from: number, newStart: string) => void;
+  /** drag a time block's label onto ANOTHER block to swap their times —
+   *  this is what makes every row a valid drop target (parity with room
+   *  headers, which can always be dropped onto each other), since empty
+   *  gaps are rare in a fully-booked real schedule. */
+  onSwapBlock: (from: number, to: number) => void;
 }
 
 /** drag-to-move a cell's assignment to another room/time (optionally another day) */
@@ -147,6 +152,7 @@ export function DayGrid({
    *  an empty gap rather than reordering the underlying array. ---- */
   const [blockDragFrom, setBlockDragFrom] = useState<number | null>(null);
   const [blockDragOverGap, setBlockDragOverGap] = useState<number | null>(null);
+  const [blockDragOverBlock, setBlockDragOverBlock] = useState<number | null>(null);
 
   const pkey = (room: string, s: number) => `${room} ${s}`;
   const paintStart = (room: string, s: number) => {
@@ -330,11 +336,37 @@ export function DayGrid({
               onDelete={() => structEdit!.onDeleteBlock(si)}
               style={{ gridColumn: "1", gridRow: `${row + 1} / span ${span}` }}
               isDragging={blockDragFrom === si}
+              isOverTarget={blockDragFrom != null && blockDragFrom !== si && blockDragOverBlock === si}
               onDragStart={() => setBlockDragFrom(si)}
               onDragEndLabel={() => {
                 setBlockDragFrom(null);
                 setBlockDragOverGap(null);
+                setBlockDragOverBlock(null);
               }}
+              onDragOverBlock={
+                blockDragFrom != null && blockDragFrom !== si
+                  ? (e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (blockDragOverBlock !== si) setBlockDragOverBlock(si);
+                    }
+                  : undefined
+              }
+              onDragLeaveBlock={
+                blockDragFrom != null && blockDragFrom !== si
+                  ? () => setBlockDragOverBlock((v) => (v === si ? null : v))
+                  : undefined
+              }
+              onDropBlock={
+                blockDragFrom != null && blockDragFrom !== si
+                  ? (e) => {
+                      e.preventDefault();
+                      structEdit!.onSwapBlock(blockDragFrom, si);
+                      setBlockDragFrom(null);
+                      setBlockDragOverBlock(null);
+                    }
+                  : undefined
+              }
             />
           );
         })}
@@ -580,6 +612,10 @@ function BlockLabel({
   isDragging,
   onDragStart,
   onDragEndLabel,
+  isOverTarget,
+  onDragOverBlock,
+  onDragLeaveBlock,
+  onDropBlock,
 }: {
   slot: SlotDef;
   editable: boolean;
@@ -589,6 +625,11 @@ function BlockLabel({
   isDragging?: boolean;
   onDragStart?: () => void;
   onDragEndLabel?: () => void;
+  /** true while another block is being dragged and hovering over this one */
+  isOverTarget?: boolean;
+  onDragOverBlock?: (e: React.DragEvent) => void;
+  onDragLeaveBlock?: () => void;
+  onDropBlock?: (e: React.DragEvent) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const compact = durationH(slot.start, slot.end) < 1.5; // short block -> single line
@@ -600,12 +641,20 @@ function BlockLabel({
         editing ? "z-40 gap-0.5 overflow-visible" : "z-20 overflow-hidden",
         !editing && "text-[9.5px] font-medium leading-[1.1] tabular-nums text-ink-3",
         isDragging && "opacity-40",
+        isOverTarget && "outline outline-2 -outline-offset-2 outline-clay",
       )}
       style={style}
       draggable={editable && !editing}
-      title={editable && !editing ? "드래그해서 다른(빈) 시간으로 이동" : undefined}
+      title={
+        editable && !editing
+          ? "드래그해서 다른 시간으로 이동(다른 블록 위에 놓으면 서로 시간을 바꿈)"
+          : undefined
+      }
       onDragStart={editable && !editing ? onDragStart : undefined}
       onDragEnd={editable && !editing ? onDragEndLabel : undefined}
+      onDragOver={editable && !editing ? onDragOverBlock : undefined}
+      onDragLeave={editable && !editing ? onDragLeaveBlock : undefined}
+      onDrop={editable && !editing ? onDropBlock : undefined}
       onBlur={(e) => {
         // time change auto-confirms; close when focus leaves the editor
         if (editing && !e.currentTarget.contains(e.relatedTarget as Node)) {
