@@ -9,6 +9,7 @@ import { PasswordInput } from "./PasswordInput";
 const NAV = [
   { href: "/", label: "월간" },
   { href: "/stats", label: "통계", auth: true },
+  { href: "/docs", label: "매뉴얼" },
 ];
 
 export function SiteHeader({

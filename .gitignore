@@ -56,3 +56,8 @@ next-env.d.ts
 /.venv
 __pycache__/
 *.pyc
+
+# manual screenshots copied from docs/manual/ for the in-app /docs pages —
+# docs/manual/ is the single source of truth; scripts/copy-docs-assets.mjs
+# regenerates this on every checkout (predev/prebuild).
+/public/docs/
