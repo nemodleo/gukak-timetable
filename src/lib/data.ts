@@ -10,7 +10,7 @@ import {
 } from "./types";
 import { iso, weeksOfMonth, ymKey, ymsInRange } from "./schedule";
 import { normalizeMemo, normalizeSlots } from "./normalize";
-import { normalizeGradeColors } from "./colors";
+import { normalizeGradeColors, normalizeInactiveColor, normalizeInactivePattern } from "./colors";
 import {
   demoCellsBetween,
   demoDayConfigsBetween,
@@ -44,6 +44,8 @@ export async function getSettings(): Promise<Settings> {
         ? normalizeSlots(data.time_slots_weekend, 300)
         : DEFAULT_SETTINGS.time_slots_weekend,
     grade_colors: normalizeGradeColors(data.grade_colors),
+    inactive_color: normalizeInactiveColor(data.inactive_color),
+    inactive_pattern: normalizeInactivePattern(data.inactive_pattern),
   };
 }
 

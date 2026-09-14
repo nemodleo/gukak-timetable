@@ -17,6 +17,9 @@ export interface GradeColors {
   gm: string;
 }
 
+/** 비활성 칸(배정 없음/비활성 지정)의 기본 배경 무늬. */
+export type InactivePattern = "hatch" | "cross" | "dots" | "solid";
+
 export interface Settings {
   school_name: string;
   year: number;
@@ -26,6 +29,9 @@ export interface Settings {
   time_slots_weekday: SlotDef[];
   time_slots_weekend: SlotDef[];
   grade_colors: GradeColors;
+  /** 비활성 칸 색 — hex 문자열 ("#rrggbb"). */
+  inactive_color: string;
+  inactive_pattern: InactivePattern;
 }
 
 export interface Pairing {
@@ -106,6 +112,9 @@ export const DEFAULT_GRADE_COLORS: GradeColors = {
   gm: "#a4c2f4",
 };
 
+export const DEFAULT_INACTIVE_COLOR = "#c7bba6";
+export const DEFAULT_INACTIVE_PATTERN: InactivePattern = "hatch";
+
 export const DEFAULT_SETTINGS: Settings = {
   school_name: "국립국악고등학교",
   year: 2026,
@@ -134,4 +143,6 @@ export const DEFAULT_SETTINGS: Settings = {
     { start: "17:00", end: "18:00" },
   ],
   grade_colors: DEFAULT_GRADE_COLORS,
+  inactive_color: DEFAULT_INACTIVE_COLOR,
+  inactive_pattern: DEFAULT_INACTIVE_PATTERN,
 };

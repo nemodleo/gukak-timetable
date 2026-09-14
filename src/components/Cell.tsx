@@ -1,9 +1,9 @@
+"use client";
+
 import clsx from "clsx";
 import type { Cell as CellT, Pairing } from "@/lib/types";
-import { blockCellBg, cellBg, gradeKey } from "@/lib/colors";
-
-const HATCH =
-  "repeating-linear-gradient(135deg, var(--color-paper-2) 0 5px, #c7bba6 5px 6px)";
+import { blockCellBg, cellBg, gradeKey, inactiveBackgroundStyle } from "@/lib/colors";
+import { useInactiveStyle } from "@/lib/inactiveStyleContext";
 
 export function CellBody({
   cell,
@@ -14,10 +14,13 @@ export function CellBody({
   pairing?: Pairing;
   size?: "sm" | "lg";
 }) {
+  const inactiveStyle = useInactiveStyle();
+
   if (!cell) return <span className="text-line-strong">·</span>;
 
   if (cell.kind === "block") {
-    // 비수업 기본 = 사선 해칭. 색을 지정하면 그 단색이 대신 깔림. 메모는 위에 표시.
+    // 비수업 기본 = 관리자 설정의 비활성 색·무늬. 색을 지정하면 그 단색이 대신
+    // 깔림. 메모는 위에 표시.
     return (
       <span
         className={clsx(
@@ -27,7 +30,7 @@ export function CellBody({
         style={
           cell.color
             ? { background: blockCellBg[cell.color] }
-            : { backgroundImage: HATCH }
+            : inactiveBackgroundStyle(inactiveStyle.pattern, inactiveStyle.color)
         }
       >
         {cell.text}
@@ -36,8 +39,8 @@ export function CellBody({
   }
 
   if (cell.kind === "pairing" && pairing) {
-    // 비활성 지정 = 배정 내용은 그대로 두고 해칭만 덮는다(강사 입력만 막힘,
-    // 통계엔 그대로 포함).
+    // 비활성 지정 = 배정 내용은 그대로 두고 관리자가 고른 비활성 색·무늬만
+    // 덮는다(강사 입력만 막힘, 통계엔 그대로 포함).
     const inactive = cell.active === false;
     const gk = gradeKey(pairing.grade, pairing.label);
     return (
@@ -46,7 +49,11 @@ export function CellBody({
           "flex h-full w-full flex-col justify-center rounded-[3px] px-1.5 py-1 leading-tight",
           size === "lg" ? "text-[13px]" : "text-[11.5px]",
         )}
-        style={inactive ? { backgroundImage: HATCH } : { background: cellBg[gk] }}
+        style={
+          inactive
+            ? inactiveBackgroundStyle(inactiveStyle.pattern, inactiveStyle.color)
+            : { background: cellBg[gk] }
+        }
       >
         <span className={clsx("font-medium text-ink", inactive && "opacity-70")}>
           {pairing.student_name}

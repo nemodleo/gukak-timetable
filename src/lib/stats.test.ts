@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_GRADE_COLORS, type Cell, type Pairing, type Settings } from "./types";
+import {
+  DEFAULT_GRADE_COLORS,
+  DEFAULT_INACTIVE_COLOR,
+  DEFAULT_INACTIVE_PATTERN,
+  type Cell,
+  type Pairing,
+  type Settings,
+} from "./types";
 import {
   actualVsTarget,
   dowOrder,
@@ -19,6 +26,8 @@ const settings: Settings = {
   ],
   time_slots_weekend: [{ start: "09:00", end: "12:00" }], // 3h
   grade_colors: DEFAULT_GRADE_COLORS,
+  inactive_color: DEFAULT_INACTIVE_COLOR,
+  inactive_pattern: DEFAULT_INACTIVE_PATTERN,
 };
 
 function pairing(over: Partial<Pairing> & { id: string }): Pairing {

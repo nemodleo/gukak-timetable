@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { GradeColors, Settings, SlotDef } from "@/lib/types";
-import { DEFAULT_GRADE_COLORS } from "@/lib/types";
+import type { GradeColors, InactivePattern, Settings, SlotDef } from "@/lib/types";
+import { DEFAULT_GRADE_COLORS, DEFAULT_INACTIVE_COLOR, DEFAULT_INACTIVE_PATTERN } from "@/lib/types";
+import { INACTIVE_PATTERN_OPTIONS, inactiveBackgroundStyle } from "@/lib/colors";
 import { SectionTitle } from "../ui";
 
 const GRADE_SLOTS: { key: keyof GradeColors; label: string }[] = [
@@ -23,7 +24,7 @@ function GradeColorPicker({
   return (
     <div>
       <div className="label-eyebrow mb-1.5 flex items-center justify-between gap-2">
-        <span>색 팔레트 (학년 배지 · 배정 칸 · 비활성 칸 색)</span>
+        <span>색 팔레트 (학년 배지 · 배정 칸 색)</span>
         <button
           type="button"
           className="font-normal normal-case tracking-normal text-clay hover:underline"
@@ -56,6 +57,78 @@ function GradeColorPicker({
             </span>
           </label>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function InactiveStylePicker({
+  color,
+  pattern,
+  onChangeColor,
+  onChangePattern,
+}: {
+  color: string;
+  pattern: InactivePattern;
+  onChangeColor: (v: string) => void;
+  onChangePattern: (v: InactivePattern) => void;
+}) {
+  return (
+    <div>
+      <div className="label-eyebrow mb-1.5 flex items-center justify-between gap-2">
+        <span>비활성 칸 색 · 무늬</span>
+        <button
+          type="button"
+          className="font-normal normal-case tracking-normal text-clay hover:underline"
+          onClick={() => {
+            onChangeColor(DEFAULT_INACTIVE_COLOR);
+            onChangePattern(DEFAULT_INACTIVE_PATTERN);
+          }}
+        >
+          기본값으로
+        </button>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 rounded-md border border-line-strong px-2.5 py-2">
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => onChangeColor(e.target.value)}
+            className="h-7 w-7 shrink-0 cursor-pointer rounded border border-line-strong bg-transparent p-0"
+          />
+          <span className="min-w-0">
+            <span className="block text-[12px] text-ink-2">색</span>
+            <input
+              value={color}
+              onChange={(e) => onChangeColor(e.target.value)}
+              className="w-20 bg-transparent text-[11px] tabular-nums text-ink-3 outline-none"
+              maxLength={7}
+              spellCheck={false}
+            />
+          </span>
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {INACTIVE_PATTERN_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => onChangePattern(opt.key)}
+              title={opt.label}
+              className={
+                "flex flex-col items-center gap-1 rounded-md border px-2 py-1.5 text-[11px] transition-colors " +
+                (pattern === opt.key
+                  ? "border-clay bg-clay-wash text-ink"
+                  : "border-line-strong text-ink-2 hover:bg-paper-2")
+              }
+            >
+              <span
+                className="h-6 w-10 rounded border border-line-strong"
+                style={inactiveBackgroundStyle(opt.key, color)}
+              />
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -222,6 +295,13 @@ export function SettingsForm({ initial }: { initial: Settings }) {
       <GradeColorPicker
         colors={s.grade_colors ?? DEFAULT_GRADE_COLORS}
         onChange={(v) => setS({ ...s, grade_colors: v })}
+      />
+
+      <InactiveStylePicker
+        color={s.inactive_color ?? DEFAULT_INACTIVE_COLOR}
+        pattern={s.inactive_pattern ?? DEFAULT_INACTIVE_PATTERN}
+        onChangeColor={(v) => setS({ ...s, inactive_color: v })}
+        onChangePattern={(v) => setS({ ...s, inactive_pattern: v })}
       />
 
       <div className="flex items-center gap-3">

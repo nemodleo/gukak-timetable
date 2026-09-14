@@ -3,9 +3,10 @@ import "./globals.css";
 import { getRole } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
 import { hasSupabase } from "@/lib/supabaseServer";
-import { DEFAULT_GRADE_COLORS } from "@/lib/types";
+import { DEFAULT_GRADE_COLORS, DEFAULT_INACTIVE_COLOR, DEFAULT_INACTIVE_PATTERN } from "@/lib/types";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConfigNotice } from "@/components/ConfigNotice";
+import { InactiveStyleProvider } from "@/lib/inactiveStyleContext";
 
 export const metadata: Metadata = {
   title: "국악고 시간표",
@@ -34,21 +35,27 @@ export default async function RootLayout({
     "--color-g3-badge": gc.g3,
     "--color-gm-badge": gc.gm,
   } as React.CSSProperties;
+  const inactiveStyle = {
+    color: settings?.inactive_color ?? DEFAULT_INACTIVE_COLOR,
+    pattern: settings?.inactive_pattern ?? DEFAULT_INACTIVE_PATTERN,
+  };
   return (
     <html lang="ko" style={paletteVars}>
       <body className="min-h-screen overflow-x-hidden">
-        <SiteHeader
-          schoolName={settings?.school_name ?? "국립국악고등학교"}
-          role={role}
-        />
-        <main className="mx-auto max-w-[1400px] px-4 pb-24 pt-8 sm:px-8">
-          {!hasSupabase() && (
-            <div className="mb-6">
-              <ConfigNotice />
-            </div>
-          )}
-          {children}
-        </main>
+        <InactiveStyleProvider value={inactiveStyle}>
+          <SiteHeader
+            schoolName={settings?.school_name ?? "국립국악고등학교"}
+            role={role}
+          />
+          <main className="mx-auto max-w-[1400px] px-4 pb-24 pt-8 sm:px-8">
+            {!hasSupabase() && (
+              <div className="mb-6">
+                <ConfigNotice />
+              </div>
+            )}
+            {children}
+          </main>
+        </InactiveStyleProvider>
       </body>
     </html>
   );

@@ -1,6 +1,14 @@
 /** grade -> visual treatment. Mirrors the xlsx conditional formatting:
  *  1 = yellow, 2 = red, 3 = green, label/grade containing "," = blue (보강). */
-import { DEFAULT_GRADE_COLORS, type CellColor, type GradeColors } from "./types";
+import type { CSSProperties } from "react";
+import {
+  DEFAULT_GRADE_COLORS,
+  DEFAULT_INACTIVE_COLOR,
+  DEFAULT_INACTIVE_PATTERN,
+  type CellColor,
+  type GradeColors,
+  type InactivePattern,
+} from "./types";
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 export function isHexColor(v: unknown): v is string {
@@ -17,6 +25,50 @@ export function normalizeGradeColors(v: unknown): GradeColors {
     g3: isHexColor(o.g3) ? o.g3 : DEFAULT_GRADE_COLORS.g3,
     gm: isHexColor(o.gm) ? o.gm : DEFAULT_GRADE_COLORS.gm,
   };
+}
+
+export function normalizeInactiveColor(v: unknown): string {
+  return isHexColor(v) ? v : DEFAULT_INACTIVE_COLOR;
+}
+
+const INACTIVE_PATTERN_SET = new Set<InactivePattern>(["hatch", "cross", "dots", "solid"]);
+export function normalizeInactivePattern(v: unknown): InactivePattern {
+  return typeof v === "string" && INACTIVE_PATTERN_SET.has(v as InactivePattern)
+    ? (v as InactivePattern)
+    : DEFAULT_INACTIVE_PATTERN;
+}
+
+export const INACTIVE_PATTERN_OPTIONS: { key: InactivePattern; label: string }[] = [
+  { key: "hatch", label: "사선" },
+  { key: "cross", label: "격자" },
+  { key: "dots", label: "점" },
+  { key: "solid", label: "단색" },
+];
+
+/** 비활성 칸의 배경 무늬 — 지정한 색(또는 CSS var)과 패턴으로 CSSProperties를
+ *  만든다. 실제 칸 렌더링(Cell.tsx)과 설정 화면의 미리보기가 같은 함수를 써서
+ *  항상 똑같이 보인다. */
+export function inactiveBackgroundStyle(pattern: InactivePattern, color: string): CSSProperties {
+  switch (pattern) {
+    case "solid":
+      return { backgroundColor: color };
+    case "dots":
+      return {
+        backgroundColor: "var(--color-paper-2)",
+        backgroundImage: `radial-gradient(${color} 1.3px, transparent 1.3px)`,
+        backgroundSize: "7px 7px",
+      };
+    case "cross":
+      return {
+        backgroundColor: "var(--color-paper-2)",
+        backgroundImage: `repeating-linear-gradient(45deg, transparent 0 5px, ${color} 5px 6px), repeating-linear-gradient(135deg, transparent 0 5px, ${color} 5px 6px)`,
+      };
+    case "hatch":
+    default:
+      return {
+        backgroundImage: `repeating-linear-gradient(135deg, var(--color-paper-2) 0 5px, ${color} 5px 6px)`,
+      };
+  }
 }
 
 export type GradeKey = "g1" | "g2" | "g3" | "gm" | "none";
