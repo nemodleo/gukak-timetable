@@ -6,17 +6,11 @@ import { notFound } from "next/navigation";
 import { marked } from "marked";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
-
-/** the three manuals live as markdown in docs/ (also rendered directly by
- *  GitHub); this route serves the same content on the app's own domain. */
-const MANUALS: Record<string, { file: string; title: string }> = {
-  admin: { file: "admin-manual.md", title: "관리자 매뉴얼" },
-  instructor: { file: "instructor-manual.md", title: "강사 매뉴얼" },
-  student: { file: "student-manual.md", title: "학생 매뉴얼" },
-};
+import { getRole } from "@/lib/auth";
+import { MANUALS, MANUAL_SLUGS, visibleManuals } from "@/lib/manuals";
 
 export function generateStaticParams() {
-  return Object.keys(MANUALS).map((slug) => ({ slug }));
+  return MANUAL_SLUGS.map((slug) => ({ slug }));
 }
 
 // only these three slugs exist — anything else is a real 404, not a lookup
@@ -28,7 +22,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const entry = MANUALS[slug];
+  const entry = MANUALS[slug as keyof typeof MANUALS];
   return { title: entry ? `${entry.title} · 국악고 시간표` : "매뉴얼" };
 }
 
@@ -50,8 +44,11 @@ export default async function DocsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const entry = MANUALS[slug];
+  const entry = MANUALS[slug as keyof typeof MANUALS];
   if (!entry) notFound();
+
+  const role = await getRole();
+  const shown = visibleManuals(role);
 
   const raw = fs.readFileSync(path.join(process.cwd(), "docs", entry.file), "utf-8");
   const html = renderMarkdown(raw);
@@ -63,7 +60,7 @@ export default async function DocsPage({
         title={entry.title}
         actions={
           <div className="flex flex-wrap gap-1.5 text-[12px]" data-no-capture>
-            {Object.entries(MANUALS).map(([key, m]) => (
+            {shown.map((key) => (
               <Link
                 key={key}
                 href={`/docs/${key}`}
@@ -74,7 +71,7 @@ export default async function DocsPage({
                     : "border-line-strong text-ink-2 hover:bg-paper-2",
                 )}
               >
-                {m.title}
+                {MANUALS[key].title}
               </Link>
             ))}
           </div>
