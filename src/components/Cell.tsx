@@ -47,7 +47,7 @@ export function CellBody({
       >
         <span className="font-medium text-ink">{pairing.student_name}</span>
         {pairing.teacher_name && (
-          <span className="text-[0.85em] text-ink-2">{pairing.teacher_name}</span>
+          <span className="text-[0.85em] text-ink-2">({pairing.teacher_name})</span>
         )}
       </span>
     );

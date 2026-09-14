@@ -4,6 +4,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import type { Cell, DayConfig, DayMemo, Pairing, Settings } from "@/lib/types";
 import { ScheduleEditor } from "./admin/ScheduleEditor";
+import { StatsSidebar } from "./StatsSidebar";
 
 type Role = "admin" | "instructor" | null;
 
@@ -32,32 +33,50 @@ export function ScheduleBoard({
   const loggedIn = role != null;
 
   return (
-    <div className="space-y-3">
-      {loggedIn && (
-        <div className="flex flex-wrap items-center gap-2 text-[13px]" data-no-capture>
-          <div className="flex gap-1 rounded-full border bg-paper p-1">
-            {(["view", "edit"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={clsx(
-                  "rounded-full px-3.5 py-1.5 transition-colors",
-                  mode === m ? "bg-ink text-paper" : "text-ink-2 hover:bg-paper-2",
-                )}
-              >
-                {m === "view" ? "보기" : "편집"}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div
+      className={clsx(
+        "flex flex-col gap-5",
+        loggedIn && "lg:flex-row-reverse lg:items-start",
       )}
+    >
+      <div className="min-w-0 space-y-3 lg:flex-1">
+        {loggedIn && (
+          <div className="flex flex-wrap items-center gap-2 text-[13px]" data-no-capture>
+            <div className="flex gap-1 rounded-full border bg-paper p-1">
+              {(["view", "edit"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={clsx(
+                    "rounded-full px-3.5 py-1.5 transition-colors",
+                    mode === m ? "bg-ink text-paper" : "text-ink-2 hover:bg-paper-2",
+                  )}
+                >
+                  {m === "view" ? "보기" : "편집"}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-      <ScheduleEditor
-        {...editorProps}
-        isAdmin={isAdmin}
-        readOnly={mode === "view" || !loggedIn}
-      />
+        <ScheduleEditor
+          {...editorProps}
+          isAdmin={isAdmin}
+          readOnly={mode === "view" || !loggedIn}
+        />
+      </div>
+
+      {/* 강사·관리자만 — 시간표 옆에서 바로 확인, 모바일에서는 아래로 */}
+      {loggedIn && (
+        <aside className="lg:w-64 lg:shrink-0" data-no-capture>
+          <StatsSidebar
+            year={editorProps.year}
+            month={editorProps.month}
+            settings={editorProps.settings}
+          />
+        </aside>
+      )}
     </div>
   );
 }
