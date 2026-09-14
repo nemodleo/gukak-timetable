@@ -7,7 +7,7 @@ import { marked } from "marked";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui";
 import { getRole } from "@/lib/auth";
-import { MANUALS, MANUAL_SLUGS, visibleManuals } from "@/lib/manuals";
+import { MANUALS, MANUAL_SLUGS, visibleManuals, type ManualSlug } from "@/lib/manuals";
 
 export function generateStaticParams() {
   return MANUAL_SLUGS.map((slug) => ({ slug }));
@@ -38,6 +38,13 @@ function renderMarkdown(raw: string): string {
   return marked.parse(rewritten, { gfm: true }) as string;
 }
 
+/** the role a viewer needs to actually read this manual (for the denial message) */
+function requiredRoleLabel(slug: ManualSlug): string {
+  if (slug === "admin") return "관리자";
+  if (slug === "instructor") return "강사 또는 관리자";
+  return "";
+}
+
 export default async function DocsPage({
   params,
 }: {
@@ -48,10 +55,12 @@ export default async function DocsPage({
   if (!entry) notFound();
 
   const role = await getRole();
-  const shown = visibleManuals(role);
+  const shown = new Set<ManualSlug>(visibleManuals(role));
+  const allowed = shown.has(slug as ManualSlug);
 
-  const raw = fs.readFileSync(path.join(process.cwd(), "docs", entry.file), "utf-8");
-  const html = renderMarkdown(raw);
+  const html = allowed
+    ? renderMarkdown(fs.readFileSync(path.join(process.cwd(), "docs", entry.file), "utf-8"))
+    : null;
 
   return (
     <div className="space-y-6">
@@ -60,24 +69,50 @@ export default async function DocsPage({
         title={entry.title}
         actions={
           <div className="flex flex-wrap gap-1.5 text-[12px]" data-no-capture>
-            {shown.map((key) => (
-              <Link
-                key={key}
-                href={`/docs/${key}`}
-                className={clsx(
-                  "whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors",
-                  key === slug
-                    ? "border-clay bg-clay text-paper"
-                    : "border-line-strong text-ink-2 hover:bg-paper-2",
-                )}
-              >
-                {MANUALS[key].title}
-              </Link>
-            ))}
+            {MANUAL_SLUGS.map((key) => {
+              const enabled = shown.has(key);
+              if (!enabled)
+                return (
+                  <span
+                    key={key}
+                    aria-disabled="true"
+                    title="권한이 없습니다"
+                    className="cursor-not-allowed whitespace-nowrap rounded-full border border-line px-3 py-1.5 text-ink-3 opacity-50"
+                  >
+                    {MANUALS[key].title}
+                  </span>
+                );
+              return (
+                <Link
+                  key={key}
+                  href={`/docs/${key}`}
+                  className={clsx(
+                    "whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors",
+                    key === slug
+                      ? "border-clay bg-clay text-paper"
+                      : "border-line-strong text-ink-2 hover:bg-paper-2",
+                  )}
+                >
+                  {MANUALS[key].title}
+                </Link>
+              );
+            })}
           </div>
         }
       />
-      <article className="docs-body max-w-[860px]" dangerouslySetInnerHTML={{ __html: html }} />
+      {allowed ? (
+        <article className="docs-body max-w-[860px]" dangerouslySetInnerHTML={{ __html: html! }} />
+      ) : (
+        <div className="max-w-[860px] rounded-lg border border-line bg-paper-2 px-6 py-10 text-center">
+          <p className="text-[15px] font-medium text-ink">
+            이 매뉴얼은 볼 수 있는 권한이 없습니다
+          </p>
+          <p className="mt-1.5 text-[13px] text-ink-2">
+            {requiredRoleLabel(slug as ManualSlug)}만 열람할 수 있습니다. 오른쪽 위에서 로그인해
+            주세요.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
