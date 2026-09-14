@@ -39,12 +39,14 @@ export const gradeLabel: Record<GradeKey, string> = {
   none: "기타",
 };
 
-/* ---- 비수업(block) 칸 배경 tint (색 미지정 시 기본은 사선 해칭) ---- */
+/* ---- 비활성(block) 칸 배경 tint (색 미지정 시 기본은 사선 해칭) ----
+ * 배정(pairing) 칸의 옅은 wash보다 한 단계 진한 -badge 톤을 써서, 같은
+ * 색이어도 비활성 칸이 또렷이 구별되게 한다. */
 export const blockCellBg: Record<CellColor, string> = {
-  y: "var(--color-g1)",
-  r: "var(--color-g2)",
-  g: "var(--color-g3)",
-  b: "var(--color-gm)",
+  y: "var(--color-g1-badge)",
+  r: "var(--color-g2-badge)",
+  g: "var(--color-g3-badge)",
+  b: "var(--color-gm-badge)",
 };
 
 export const CELL_COLOR_OPTIONS: { key: CellColor; label: string }[] = [

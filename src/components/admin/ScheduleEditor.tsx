@@ -1065,7 +1065,7 @@ function CellEditor({
                 )}
                 style={{
                   backgroundImage:
-                    "repeating-linear-gradient(135deg, var(--color-paper-2) 0 4px, #e2dcd2 4px 5px)",
+                    "repeating-linear-gradient(135deg, var(--color-paper-2) 0 4px, #c7bba6 4px 5px)",
                 }}
               />
               {CELL_COLOR_OPTIONS.map((o) => (

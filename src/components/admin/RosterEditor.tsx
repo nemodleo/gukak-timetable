@@ -253,6 +253,7 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-paper-2 text-[11px] text-ink-3">
               <tr>
+                <th className="w-7 px-1 py-2" />
                 <th className="px-2 py-2 font-semibold">학생</th>
                 <th className="px-2 py-2 font-semibold">학년</th>
                 <th className="px-2 py-2 font-semibold">교사</th>
@@ -267,17 +268,6 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
                 return (
                   <tr
                     key={r.id ?? `new-${i}`}
-                    draggable
-                    title="드래그해서 순서 변경"
-                    onDragStart={(e) => {
-                      setDragIdx(i);
-                      e.dataTransfer.effectAllowed = "move";
-                      e.dataTransfer.setData("text/plain", String(i));
-                    }}
-                    onDragEnd={() => {
-                      setDragIdx(null);
-                      setOverIdx(null);
-                    }}
                     onDragOver={(e) => {
                       if (dragIdx == null) return;
                       e.preventDefault();
@@ -291,12 +281,38 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
                       setOverIdx(null);
                     }}
                     className={clsx(
-                      "cursor-grab border-t active:cursor-grabbing",
+                      "border-t",
                       dragIdx === i && "opacity-40",
                       overIdx === i && dragIdx !== null && dragIdx !== i &&
                         "border-t-2 border-t-clay",
                     )}
                   >
+                    <td className="px-1 py-1">
+                      <span
+                        draggable
+                        title="드래그해서 순서 변경"
+                        aria-label="순서 변경 핸들"
+                        onDragStart={(e) => {
+                          setDragIdx(i);
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData("text/plain", String(i));
+                        }}
+                        onDragEnd={() => {
+                          setDragIdx(null);
+                          setOverIdx(null);
+                        }}
+                        className="flex h-6 w-6 cursor-grab items-center justify-center rounded text-ink-3 hover:bg-paper-2 hover:text-ink-2 active:cursor-grabbing"
+                      >
+                        <svg viewBox="0 0 10 16" width="10" height="16" aria-hidden="true">
+                          <circle cx="2.5" cy="2.5" r="1.4" fill="currentColor" />
+                          <circle cx="7.5" cy="2.5" r="1.4" fill="currentColor" />
+                          <circle cx="2.5" cy="8" r="1.4" fill="currentColor" />
+                          <circle cx="7.5" cy="8" r="1.4" fill="currentColor" />
+                          <circle cx="2.5" cy="13.5" r="1.4" fill="currentColor" />
+                          <circle cx="7.5" cy="13.5" r="1.4" fill="currentColor" />
+                        </svg>
+                      </span>
+                    </td>
                     <td className="px-2 py-1">
                       <input
                         className={inp}

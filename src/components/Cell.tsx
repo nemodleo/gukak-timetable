@@ -3,7 +3,7 @@ import type { Cell as CellT, Pairing } from "@/lib/types";
 import { blockCellBg, cellBg, gradeKey } from "@/lib/colors";
 
 const HATCH =
-  "repeating-linear-gradient(135deg, var(--color-paper-2) 0 5px, #e2dcd2 5px 6px)";
+  "repeating-linear-gradient(135deg, var(--color-paper-2) 0 5px, #c7bba6 5px 6px)";
 
 export function CellBody({
   cell,
