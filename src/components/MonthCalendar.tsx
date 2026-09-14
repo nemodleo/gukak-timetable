@@ -17,6 +17,7 @@ import {
 } from "@/lib/schedule";
 import { durationH } from "@/lib/time";
 import { DOW_KO, dowOrder } from "@/lib/stats";
+import { LockIcon } from "./ui";
 
 type Role = "admin" | "instructor" | null;
 
@@ -79,6 +80,31 @@ export function MonthCalendar({
     return () => window.removeEventListener("mouseup", up);
   }, [paintMode]);
 
+  const inMonthDates = weeks
+    .flatMap((w) => w.days)
+    .filter((d) => isInMonth(d, year, month))
+    .map(iso);
+  const monthAllApproved =
+    inMonthDates.length > 0 && inMonthDates.every((date) => approved.has(date));
+
+  async function toggleWholeMonth() {
+    const nextApproved = !monthAllApproved;
+    const res = await fetch("/api/day-approvals", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ dates: inMonthDates, approved: nextApproved }),
+    });
+    if (!res.ok) return;
+    setApproved((prev) => {
+      const n = new Set(prev);
+      for (const date of inMonthDates) {
+        if (nextApproved) n.add(date);
+        else n.delete(date);
+      }
+      return n;
+    });
+  }
+
   const paintStart = (date: string) => {
     const value: "approve" | "lock" = approved.has(date) ? "lock" : "approve";
     drag.current = { value, set: new Set([date]) };
@@ -113,7 +139,7 @@ export function MonthCalendar({
   return (
     <div className="space-y-2">
       {isAdmin && (
-        <div data-no-capture>
+        <div className="flex flex-wrap items-center gap-2" data-no-capture>
           <button
             type="button"
             onClick={() => setPaintMode((p) => !p)}
@@ -125,6 +151,18 @@ export function MonthCalendar({
             )}
           >
             {paintMode ? "승인 지정 중 — 드래그하세요" : "승인 지정"}
+          </button>
+          <button
+            type="button"
+            onClick={toggleWholeMonth}
+            title={
+              monthAllApproved
+                ? "이 달 전체를 다시 잠급니다"
+                : "이 달의 모든 날짜를 한 번에 승인합니다"
+            }
+            className="rounded-full border border-line-strong px-3.5 py-1.5 text-[12px] text-ink-2 transition-colors hover:bg-paper-2"
+          >
+            {monthAllApproved ? "이번 달 전체 잠금" : "이번 달 전체 승인"}
           </button>
         </div>
       )}
@@ -207,12 +245,10 @@ export function MonthCalendar({
                       {fmtDayShort(d)}
                     </span>
                     {showLockBadge && (
-                      <span
-                        className="absolute right-1 top-1 text-[10px] leading-none opacity-70"
+                      <LockIcon
+                        className="absolute right-1 top-1 h-3 w-3 text-ink-3 opacity-70"
                         title="관리자 승인 대기(강사 입력 잠금)"
-                      >
-                        🔒
-                      </span>
+                      />
                     )}
                     {available <= 0 ? (
                       <span

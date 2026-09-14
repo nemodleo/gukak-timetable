@@ -135,3 +135,56 @@ export function Legend({ className }: { className?: string }) {
     </div>
   );
 }
+
+/** 승인 대기(잠금) — 미니멀 아웃라인 자물쇠, 이모지 대신 */
+export function LockIcon({ className, title }: { className?: string; title?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      role={title ? "img" : undefined}
+      className={className}
+    >
+      {title && <title>{title}</title>}
+      <rect
+        x="4.25"
+        y="9"
+        width="11.5"
+        height="8"
+        rx="1.75"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** 승인됨(잠금 해제) — 열린 자물쇠 */
+export function UnlockIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className={className}>
+      <rect
+        x="4.25"
+        y="9"
+        width="11.5"
+        height="8"
+        rx="1.75"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M6.5 9V6.5a3.5 3.5 0 0 1 6.85-1"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

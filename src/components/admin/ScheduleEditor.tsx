@@ -29,6 +29,7 @@ import { hasCellContent, keyOf } from "@/lib/cellIndex";
 import { CELL_COLOR_OPTIONS, blockCellBg } from "@/lib/colors";
 import { DayGrid, EMPTY_MEMO_LINES, type DnDCtl } from "../DayGrid";
 import { DayCapture } from "../DayCapture";
+import { LockIcon, UnlockIcon } from "../ui";
 
 type Draft = { date: string; room: string; slot: number };
 type Struct = { rooms: string[]; slots: SlotDef[] };
@@ -1121,22 +1122,28 @@ function EditableDay({
             title={isApproved ? "클릭하여 다시 잠금" : "클릭하여 승인(강사 입력 허용)"}
             data-no-capture
             className={clsx(
-              "rounded-full border px-2 py-0.5 text-[10.5px] font-medium transition-colors",
+              "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-medium transition-colors",
               isApproved
                 ? "border-line-strong text-ink-3 hover:bg-paper-2"
                 : "border-clay bg-clay-wash text-clay hover:bg-clay/10",
             )}
           >
-            {isApproved ? "🔓 승인됨" : "🔒 승인 대기"}
+            {isApproved ? (
+              <UnlockIcon className="h-3 w-3 shrink-0" />
+            ) : (
+              <LockIcon className="h-3 w-3 shrink-0" />
+            )}
+            {isApproved ? "승인됨" : "승인 대기"}
           </button>
         ) : (
           locked && (
             <span
-              className="rounded-full border border-line-strong px-2 py-0.5 text-[10.5px] font-medium text-ink-3"
+              className="flex items-center gap-1 rounded-full border border-line-strong px-2 py-0.5 text-[10.5px] font-medium text-ink-3"
               title="관리자가 승인하기 전까지 강사는 편집할 수 없습니다"
               data-no-capture
             >
-              🔒 승인 대기
+              <LockIcon className="h-3 w-3 shrink-0" />
+              승인 대기
             </span>
           )
         )}

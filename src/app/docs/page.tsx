@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/ui";
+import { LockIcon, PageHeader } from "@/components/ui";
 import { getRole } from "@/lib/auth";
 import { MANUAL_SLUGS, MANUALS, visibleManuals, type ManualSlug } from "@/lib/manuals";
 
@@ -24,7 +24,10 @@ export default async function DocsIndexPage() {
                 title="권한이 없습니다"
                 className="cursor-not-allowed rounded-lg border border-line bg-paper-2 p-4 opacity-50"
               >
-                <h2 className="font-serif text-[17px] font-medium text-ink-3">🔒 {m.title}</h2>
+                <h2 className="flex items-center gap-1.5 font-serif text-[17px] font-medium text-ink-3">
+                  <LockIcon className="h-4 w-4 shrink-0" />
+                  {m.title}
+                </h2>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-ink-3">{m.desc}</p>
               </div>
             );
