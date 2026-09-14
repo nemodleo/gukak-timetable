@@ -166,6 +166,25 @@ export function DayGrid({
     drag.current.set.add(pkey(room, s));
     setPreview(new Set(drag.current.set));
   };
+  /** 비활성 지정 모드에서 열(방) 이름을 클릭 — 그 방의 모든 시간대를 한번에 토글.
+   *  이미 전부 비활성이면 해제, 아니면 전부 비활성으로. */
+  const paintColumn = (room: string) => {
+    if (!onPaint) return;
+    const targets = slots.map((_, s) => ({ room, slot: s }));
+    const allBlocked = targets.every(
+      (t) => cellIndex.get(keyOf(date, t.room, t.slot))?.kind === "block",
+    );
+    onPaint(targets, allBlocked ? "clear" : "block");
+  };
+  /** 비활성 지정 모드에서 행(시간) 이름을 클릭 — 그 시간대의 모든 방을 한번에 토글. */
+  const paintRow = (s: number) => {
+    if (!onPaint) return;
+    const targets = rooms.map((room) => ({ room, slot: s }));
+    const allBlocked = targets.every(
+      (t) => cellIndex.get(keyOf(date, t.room, t.slot))?.kind === "block",
+    );
+    onPaint(targets, allBlocked ? "clear" : "block");
+  };
 
   return (
     <div
@@ -194,6 +213,8 @@ export function DayGrid({
               setRoomDrag(null);
             }}
             onDragEndHeader={() => setRoomDrag(null)}
+            paintMode={paintMode}
+            onPaintColumn={() => paintColumn(r)}
           />
         ))}
         {showStruct && (
@@ -367,6 +388,8 @@ export function DayGrid({
                     }
                   : undefined
               }
+              paintMode={paintMode}
+              onPaintRow={() => paintRow(si)}
             />
           );
         })}
@@ -503,6 +526,8 @@ function RoomHeader({
   onDragOverHeader,
   onDropHeader,
   onDragEndHeader,
+  paintMode,
+  onPaintColumn,
 }: {
   name: string;
   editable: boolean;
@@ -514,6 +539,9 @@ function RoomHeader({
   onDragOverHeader?: () => void;
   onDropHeader?: () => void;
   onDragEndHeader?: () => void;
+  /** 비활성 지정 모드 중엔 이름 드래그·변경 대신 열 전체를 토글한다 */
+  paintMode?: boolean;
+  onPaintColumn?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [v, setV] = useState(name);
@@ -521,6 +549,18 @@ function RoomHeader({
   if (prev !== name) {
     setPrev(name);
     setV(name);
+  }
+  if (paintMode) {
+    return (
+      <button
+        type="button"
+        onClick={onPaintColumn}
+        title="클릭하여 이 강의실 전체 비활성 지정/해제"
+        className="border-r bg-paper px-1 py-1.5 text-center text-[11px] font-semibold text-ink-2 hover:bg-clay-wash/70"
+      >
+        {name}
+      </button>
+    );
   }
   if (!editable) {
     return (
@@ -616,6 +656,8 @@ function BlockLabel({
   onDragOverBlock,
   onDragLeaveBlock,
   onDropBlock,
+  paintMode,
+  onPaintRow,
 }: {
   slot: SlotDef;
   editable: boolean;
@@ -630,10 +672,29 @@ function BlockLabel({
   onDragOverBlock?: (e: React.DragEvent) => void;
   onDragLeaveBlock?: () => void;
   onDropBlock?: (e: React.DragEvent) => void;
+  /** 비활성 지정 모드 중엔 시간 이동/변경 대신 이 시간대(모든 방)를 토글한다 */
+  paintMode?: boolean;
+  onPaintRow?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const compact = durationH(slot.start, slot.end) < 1.5; // short block -> single line
   const late = isPastMidnight(slot.start) || isPastMidnight(slot.end);
+  if (paintMode) {
+    return (
+      <button
+        type="button"
+        style={style}
+        onClick={onPaintRow}
+        title="클릭하여 이 시간대 전체(모든 방) 비활성 지정/해제"
+        className={clsx(
+          "z-20 flex items-center justify-center overflow-hidden border-b border-r bg-paper px-0.5 text-center text-[9.5px] font-medium leading-[1.1] tabular-nums text-ink-3 hover:bg-clay-wash/70",
+          !compact && "whitespace-pre-line",
+        )}
+      >
+        {slot.label || (compact ? rangeLabelShort(slot.start, slot.end) : rangeLabel(slot.start, slot.end))}
+      </button>
+    );
+  }
   return (
     <div
       className={clsx(

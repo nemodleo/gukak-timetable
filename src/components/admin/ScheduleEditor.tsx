@@ -792,7 +792,7 @@ export function ScheduleEditor({
                   : "border-line-strong text-ink-2 hover:bg-paper-2",
               )}
             >
-              {paint ? "비활성 지정 중 — 드래그하세요" : "비활성 지정"}
+              {paint ? "비활성 지정 중 — 드래그, 또는 행/열 이름 클릭" : "비활성 지정"}
             </button>
           )}
           {!readOnly && (
