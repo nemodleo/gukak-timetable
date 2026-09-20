@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { getRole } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
 import { hasSupabase } from "@/lib/supabaseServer";
@@ -62,6 +63,7 @@ export default async function RootLayout({
             {children}
           </main>
         </InactiveStyleProvider>
+        <Analytics />
       </body>
     </html>
   );
