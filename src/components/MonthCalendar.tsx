@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import type { Cell, DayConfig, Settings } from "@/lib/types";
@@ -18,6 +18,8 @@ import {
 import { durationH } from "@/lib/time";
 import { DOW_KO, dowOrder } from "@/lib/stats";
 import { LockIcon } from "./ui";
+import { saveDayApprovals, withApproval } from "@/lib/api";
+import { usePaintDrag } from "@/lib/usePaintDrag";
 
 type Role = "admin" | "instructor" | null;
 
@@ -49,36 +51,14 @@ export function MonthCalendar({
 
   const [approved, setApproved] = useState<Set<string>>(() => new Set(approvedDates));
   const [paintMode, setPaintMode] = useState(false);
-  const [preview, setPreview] = useState<Set<string>>(new Set());
-  const drag = useRef<{ value: "approve" | "lock"; set: Set<string> } | null>(null);
 
-  useEffect(() => {
-    if (!paintMode) return;
-    const up = async () => {
-      const d = drag.current;
-      drag.current = null;
-      setPreview(new Set());
-      if (!d || !d.set.size) return;
-      const dates = [...d.set];
-      const nextApproved = d.value === "approve";
-      const res = await fetch("/api/day-approvals", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ dates, approved: nextApproved }),
-      });
-      if (!res.ok) return;
-      setApproved((prev) => {
-        const n = new Set(prev);
-        for (const date of dates) {
-          if (nextApproved) n.add(date);
-          else n.delete(date);
-        }
-        return n;
-      });
-    };
-    window.addEventListener("mouseup", up);
-    return () => window.removeEventListener("mouseup", up);
-  }, [paintMode]);
+  /** 승인·잠금 저장 후 화면에 반영 (실패하면 그대로 둔다) */
+  async function setApproval(dates: string[], on: boolean) {
+    if (await saveDayApprovals(dates, on)) return;
+    setApproved((prev) => withApproval(prev, dates, on));
+  }
+
+  const paint = usePaintDrag<string, boolean>(paintMode, (d) => d, setApproval);
 
   const inMonthDates = weeks
     .flatMap((w) => w.days)
@@ -86,35 +66,6 @@ export function MonthCalendar({
     .map(iso);
   const monthAllApproved =
     inMonthDates.length > 0 && inMonthDates.every((date) => approved.has(date));
-
-  async function toggleWholeMonth() {
-    const nextApproved = !monthAllApproved;
-    const res = await fetch("/api/day-approvals", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ dates: inMonthDates, approved: nextApproved }),
-    });
-    if (!res.ok) return;
-    setApproved((prev) => {
-      const n = new Set(prev);
-      for (const date of inMonthDates) {
-        if (nextApproved) n.add(date);
-        else n.delete(date);
-      }
-      return n;
-    });
-  }
-
-  const paintStart = (date: string) => {
-    const value: "approve" | "lock" = approved.has(date) ? "lock" : "approve";
-    drag.current = { value, set: new Set([date]) };
-    setPreview(new Set([date]));
-  };
-  const paintEnter = (date: string) => {
-    if (!drag.current) return;
-    drag.current.set.add(date);
-    setPreview(new Set(drag.current.set));
-  };
 
   // 포화도: 수업(pairing) 채운 시간 ÷ 강사가 입력할 수 있는 시간
   //         (관리자가 설정한 강의실·시간블록 범위 − 비수업 시간)
@@ -154,7 +105,7 @@ export function MonthCalendar({
           </button>
           <button
             type="button"
-            onClick={toggleWholeMonth}
+            onClick={() => setApproval(inMonthDates, !monthAllApproved)}
             title={
               monthAllApproved
                 ? "이 달 전체를 다시 잠급니다"
@@ -273,36 +224,33 @@ export function MonthCalendar({
                   </>
                 );
 
-                if (paintMode) {
-                  return (
-                    <div
-                      key={date}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        paintStart(date);
-                      }}
-                      onMouseEnter={() => paintEnter(date)}
-                      style={inMonthBg}
-                      className={clsx(
-                        "group relative flex min-h-[68px] flex-col gap-1 border-r px-2 py-1.5 last:border-r-0",
-                        !inMonth && "text-ink-3",
-                        preview.has(date) &&
-                          "outline outline-2 -outline-offset-2 outline-clay",
-                      )}
-                    >
-                      {content}
-                    </div>
-                  );
-                }
-                return (
+                const cellCls = clsx(
+                  "group relative flex min-h-[68px] flex-col gap-1 border-r px-2 py-1.5 last:border-r-0",
+                  !inMonth && "text-ink-3",
+                );
+                // 승인 지정 중엔 칸이 링크가 아니라 드래그 대상
+                return paintMode ? (
+                  <div
+                    key={date}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      paint.start(date, !approved.has(date));
+                    }}
+                    onMouseEnter={() => paint.enter(date)}
+                    style={inMonthBg}
+                    className={clsx(
+                      cellCls,
+                      paint.isPreviewed(date) && "outline outline-2 -outline-offset-2 outline-clay",
+                    )}
+                  >
+                    {content}
+                  </div>
+                ) : (
                   <Link
                     key={date}
                     href={`/day/${date}`}
                     style={inMonthBg}
-                    className={clsx(
-                      "group relative flex min-h-[68px] flex-col gap-1 border-r px-2 py-1.5 transition-colors last:border-r-0 hover:bg-paper-2",
-                      !inMonth && "text-ink-3",
-                    )}
+                    className={clsx(cellCls, "transition-colors hover:bg-paper-2")}
                   >
                     {content}
                   </Link>

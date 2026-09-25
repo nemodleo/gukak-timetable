@@ -1,32 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import clsx from "clsx";
-import type { Cell, MemoLine, MemoSize, Pairing, SlotDef } from "@/lib/types";
+import type { Cell, MemoLine, Pairing, SlotDef } from "@/lib/types";
 import { gridGeom } from "@/lib/schedule";
-import {
-  durationH,
-  fromMin,
-  isPastMidnight,
-  rangeLabel,
-  rangeLabelShort,
-} from "@/lib/time";
+import { fromMin } from "@/lib/time";
 import { isInactiveCell, keyOf, type CellIndex } from "@/lib/cellIndex";
+import { usePaintDrag } from "@/lib/usePaintDrag";
 import { CellBody } from "./Cell";
+import { BlockLabel, RoomHeader } from "./GridHeaders";
+import { MemoColumn } from "./MemoColumn";
+
+export { EMPTY_MEMO_LINES } from "./MemoColumn";
 
 const ROW_H = 27; // px per 30-min row
-
-const MEMO_PX: Record<MemoSize, string> = {
-  s: "text-[9px]",
-  m: "text-[10.5px]",
-  l: "text-[12.5px]",
-};
 
 export interface MemoCtl {
   mode: "none" | "read" | "edit";
   lines: Record<string, MemoLine>;
   onChange?: (hhmm: string, line: MemoLine | null) => void;
 }
+
+/** one cell addressed for 비활성 지정 */
+export type PaintTarget = { room: string; slot: number };
+export type PaintValue = "deactivate" | "activate";
 
 export interface StructEdit {
   onRenameRoom: (i: number, name: string) => void;
@@ -83,10 +80,7 @@ export function DayGrid({
   editable?: boolean;
   paintMode?: boolean;
   onCellClick?: (room: string, slotIndex: number) => void;
-  onPaint?: (
-    targets: { room: string; slot: number }[],
-    value: "deactivate" | "activate",
-  ) => void;
+  onPaint?: (targets: PaintTarget[], value: PaintValue) => void;
   structEdit?: StructEdit;
   dnd?: DnDCtl;
   fallback?: { start: string; end: string };
@@ -125,25 +119,16 @@ export function DayGrid({
     (showStruct ? " 22px" : "") +
     (showMemo ? ` ${showStruct ? 178 : 208}px` : "");
 
-  /* ---- paint drag ---- */
-  const drag = useRef<{ value: "deactivate" | "activate"; set: Set<string> } | null>(null);
-  const [preview, setPreview] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    if (!paintMode) return;
-    const up = () => {
-      if (drag.current && onPaint) {
-        const targets = [...drag.current.set].map((k) => {
-          const [r, s] = k.split(" ");
-          return { room: r, slot: Number(s) };
-        });
-        if (targets.length) onPaint(targets, drag.current.value);
-      }
-      drag.current = null;
-      setPreview(new Set());
-    };
-    window.addEventListener("mouseup", up);
-    return () => window.removeEventListener("mouseup", up);
-  }, [paintMode, onPaint]);
+  /* ---- paint drag (비활성 지정) ---- */
+  const isInactiveAt = (t: PaintTarget) => isInactiveCell(cellIndex.get(keyOf(date, t.room, t.slot)));
+  const paint = usePaintDrag<PaintTarget, PaintValue>(
+    paintMode,
+    (t) => keyOf(date, t.room, t.slot),
+    (targets, value) => onPaint?.(targets, value),
+  );
+  /** 행(시간)·열(강의실) 이름 클릭 — 전부 비활성이면 해제, 아니면 전부 비활성으로 */
+  const paintAll = (targets: PaintTarget[]) =>
+    onPaint?.(targets, targets.every(isInactiveAt) ? "activate" : "deactivate");
 
   /* ---- drag-reorder room headers (columns have no inherent order) ---- */
   const [roomDrag, setRoomDrag] = useState<{ from: number; over: number | null } | null>(
@@ -157,37 +142,6 @@ export function DayGrid({
   const [blockDragOverGap, setBlockDragOverGap] = useState<number | null>(null);
   const [blockDragOverBlock, setBlockDragOverBlock] = useState<number | null>(null);
 
-  const pkey = (room: string, s: number) => `${room} ${s}`;
-  const paintStart = (room: string, s: number) => {
-    const cur = cellIndex.get(keyOf(date, room, s));
-    const value: "deactivate" | "activate" = isInactiveCell(cur) ? "activate" : "deactivate";
-    drag.current = { value, set: new Set([pkey(room, s)]) };
-    setPreview(new Set([pkey(room, s)]));
-  };
-  const paintEnter = (room: string, s: number) => {
-    if (!drag.current) return;
-    drag.current.set.add(pkey(room, s));
-    setPreview(new Set(drag.current.set));
-  };
-  /** 비활성 지정 모드에서 열(방) 이름을 클릭 — 그 방의 모든 시간대를 한번에 토글.
-   *  이미 전부 비활성이면 해제, 아니면 전부 비활성으로 (내용은 그대로 둔다). */
-  const paintColumn = (room: string) => {
-    if (!onPaint) return;
-    const targets = slots.map((_, s) => ({ room, slot: s }));
-    const allInactive = targets.every((t) =>
-      isInactiveCell(cellIndex.get(keyOf(date, t.room, t.slot))),
-    );
-    onPaint(targets, allInactive ? "activate" : "deactivate");
-  };
-  /** 비활성 지정 모드에서 행(시간) 이름을 클릭 — 그 시간대의 모든 방을 한번에 토글. */
-  const paintRow = (s: number) => {
-    if (!onPaint) return;
-    const targets = rooms.map((room) => ({ room, slot: s }));
-    const allInactive = targets.every((t) =>
-      isInactiveCell(cellIndex.get(keyOf(date, t.room, t.slot))),
-    );
-    onPaint(targets, allInactive ? "activate" : "deactivate");
-  };
 
   return (
     <div
@@ -217,7 +171,7 @@ export function DayGrid({
             }}
             onDragEndHeader={() => setRoomDrag(null)}
             paintMode={paintMode}
-            onPaintColumn={() => paintColumn(r)}
+            onPaintColumn={() => paintAll(slots.map((_, slot) => ({ room: r, slot })))}
           />
         ))}
         {showStruct && (
@@ -392,7 +346,7 @@ export function DayGrid({
                   : undefined
               }
               paintMode={paintMode}
-              onPaintRow={() => paintRow(si)}
+              onPaintRow={() => paintAll(rooms.map((room) => ({ room, slot: si })))}
             />
           );
         })}
@@ -402,7 +356,7 @@ export function DayGrid({
           const { row, span } = geom.spanRows(s);
           return rooms.map((room, ri) => {
             const cell = cellIndex.get(keyOf(date, room, si));
-            const inPreview = preview.has(pkey(room, si));
+            const inPreview = paint.isPreviewed({ room, slot: si });
             const style = {
               gridColumn: `${2 + ri}`,
               gridRow: `${row + 1} / span ${span}`,
@@ -415,9 +369,10 @@ export function DayGrid({
                   key={`c-${si}-${ri}`}
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    paintStart(room, si);
+                    const t = { room, slot: si };
+                    paint.start(t, isInactiveAt(t) ? "activate" : "deactivate");
                   }}
-                  onMouseEnter={() => paintEnter(room, si)}
+                  onMouseEnter={() => paint.enter({ room, slot: si })}
                   className={clsx(
                     "z-20 flex items-stretch border-b border-r bg-paper",
                     inPreview && "outline outline-2 -outline-offset-2 outline-clay",
@@ -512,390 +467,6 @@ export function DayGrid({
           </button>
         )}
       </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-
-function RoomHeader({
-  name,
-  editable,
-  onRename,
-  onDelete,
-  isSource,
-  isOver,
-  onDragStart,
-  onDragOverHeader,
-  onDropHeader,
-  onDragEndHeader,
-  paintMode,
-  onPaintColumn,
-}: {
-  name: string;
-  editable: boolean;
-  onRename: (v: string) => void;
-  onDelete: () => void;
-  isSource?: boolean;
-  isOver?: boolean;
-  onDragStart?: () => void;
-  onDragOverHeader?: () => void;
-  onDropHeader?: () => void;
-  onDragEndHeader?: () => void;
-  /** 비활성 지정 모드 중엔 이름 드래그·변경 대신 열 전체를 토글한다 */
-  paintMode?: boolean;
-  onPaintColumn?: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [v, setV] = useState(name);
-  const [prev, setPrev] = useState(name);
-  if (prev !== name) {
-    setPrev(name);
-    setV(name);
-  }
-  if (paintMode) {
-    return (
-      <button
-        type="button"
-        onClick={onPaintColumn}
-        title="클릭하여 이 강의실 전체 비활성 지정/해제"
-        className="border-r bg-paper px-1 py-1.5 text-center text-[11px] font-semibold text-ink-2 hover:bg-clay-wash/70"
-      >
-        {name}
-      </button>
-    );
-  }
-  if (!editable) {
-    return (
-      <div className="border-r px-1 py-1.5 text-center text-[11px] font-semibold text-ink-2">
-        {name}
-      </div>
-    );
-  }
-  return (
-    <div
-      className={clsx(
-        "group relative border-r px-1 py-1.5 text-center",
-        isSource && "opacity-40",
-        isOver && "outline outline-2 -outline-offset-2 outline-clay",
-      )}
-      draggable={!editing}
-      title={!editing ? "드래그해서 강의실 순서 변경" : undefined}
-      onDragStart={!editing ? onDragStart : undefined}
-      onDragOver={
-        !editing
-          ? (e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = "move";
-              onDragOverHeader?.();
-            }
-          : undefined
-      }
-      onDrop={
-        !editing
-          ? (e) => {
-              e.preventDefault();
-              onDropHeader?.();
-            }
-          : undefined
-      }
-      onDragEnd={!editing ? onDragEndHeader : undefined}
-    >
-      {editing ? (
-        <input
-          autoFocus
-          value={v}
-          onFocus={(e) => e.currentTarget.select()}
-          onChange={(e) => setV(e.target.value)}
-          onBlur={() => {
-            setEditing(false);
-            if (v.trim() && v !== name) onRename(v.trim());
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-            if (e.key === "Escape") {
-              setV(name);
-              setEditing(false);
-            }
-          }}
-          className="w-full rounded border border-clay bg-paper px-0.5 text-center text-[11px] font-semibold outline-none"
-        />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          title="클릭하여 이름 변경"
-          className="w-full text-[11px] font-semibold text-ink-2"
-        >
-          {name}
-        </button>
-      )}
-      {!editing && (
-        <button
-          type="button"
-          onClick={onDelete}
-          title="강의실 삭제"
-          className="absolute -right-0.5 -top-0.5 hidden rounded-full bg-over px-1 text-[9px] leading-4 text-paper group-hover:block"
-        >
-          ✕
-        </button>
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-
-function BlockLabel({
-  slot,
-  editable,
-  onRetime,
-  onDelete,
-  style,
-  isDragging,
-  onDragStart,
-  onDragEndLabel,
-  isOverTarget,
-  onDragOverBlock,
-  onDragLeaveBlock,
-  onDropBlock,
-  paintMode,
-  onPaintRow,
-}: {
-  slot: SlotDef;
-  editable: boolean;
-  onRetime: (patch: Partial<SlotDef>) => void;
-  onDelete: () => void;
-  style: React.CSSProperties;
-  isDragging?: boolean;
-  onDragStart?: () => void;
-  onDragEndLabel?: () => void;
-  /** true while another block is being dragged and hovering over this one */
-  isOverTarget?: boolean;
-  onDragOverBlock?: (e: React.DragEvent) => void;
-  onDragLeaveBlock?: () => void;
-  onDropBlock?: (e: React.DragEvent) => void;
-  /** 비활성 지정 모드 중엔 시간 이동/변경 대신 이 시간대(모든 방)를 토글한다 */
-  paintMode?: boolean;
-  onPaintRow?: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const compact = durationH(slot.start, slot.end) < 1.5; // short block -> single line
-  const late = isPastMidnight(slot.start) || isPastMidnight(slot.end);
-  if (paintMode) {
-    return (
-      <button
-        type="button"
-        style={style}
-        onClick={onPaintRow}
-        title="클릭하여 이 시간대 전체(모든 방) 비활성 지정/해제"
-        className={clsx(
-          "z-20 flex items-center justify-center overflow-hidden border-b border-r bg-paper px-0.5 text-center text-[9.5px] font-medium leading-[1.1] tabular-nums text-ink-3 hover:bg-clay-wash/70",
-          !compact && "whitespace-pre-line",
-        )}
-      >
-        {slot.label || (compact ? rangeLabelShort(slot.start, slot.end) : rangeLabel(slot.start, slot.end))}
-      </button>
-    );
-  }
-  return (
-    <div
-      className={clsx(
-        "group relative flex flex-col items-center justify-center border-b border-r bg-paper px-0.5 text-center",
-        editing ? "z-40 gap-0.5 overflow-visible" : "z-20 overflow-hidden",
-        !editing && "text-[9.5px] font-medium leading-[1.1] tabular-nums text-ink-3",
-        isDragging && "opacity-40",
-        isOverTarget && "outline outline-2 -outline-offset-2 outline-clay",
-      )}
-      style={style}
-      draggable={editable && !editing}
-      title={
-        editable && !editing
-          ? "드래그해서 다른 시간으로 이동(다른 블록 위에 놓으면 서로 시간을 바꿈)"
-          : undefined
-      }
-      onDragStart={editable && !editing ? onDragStart : undefined}
-      onDragEnd={editable && !editing ? onDragEndLabel : undefined}
-      onDragOver={editable && !editing ? onDragOverBlock : undefined}
-      onDragLeave={editable && !editing ? onDragLeaveBlock : undefined}
-      onDrop={editable && !editing ? onDropBlock : undefined}
-      onBlur={(e) => {
-        // time change auto-confirms; close when focus leaves the editor
-        if (editing && !e.currentTarget.contains(e.relatedTarget as Node)) {
-          setEditing(false);
-        }
-      }}
-    >
-      {editable && editing ? (
-        <>
-          <input
-            autoFocus
-            type={late ? "text" : "time"}
-            step={1800}
-            defaultValue={slot.start}
-            onBlur={(e) => e.target.value && e.target.value !== slot.start && onRetime({ start: e.target.value })}
-            className="w-full rounded border border-clay bg-paper text-center text-[9px] tabular-nums outline-none"
-          />
-          <input
-            type={late ? "text" : "time"}
-            step={1800}
-            defaultValue={slot.end}
-            onBlur={(e) => e.target.value && e.target.value !== slot.end && onRetime({ end: e.target.value })}
-            className="w-full rounded border border-clay bg-paper text-center text-[9px] tabular-nums outline-none"
-          />
-        </>
-      ) : (
-        <button
-          type="button"
-          onClick={() => editable && setEditing(true)}
-          className={clsx("leading-[1.1]", !compact && "whitespace-pre-line")}
-          title={editable ? "클릭하여 시간 변경" : undefined}
-        >
-          {slot.label ||
-            (compact
-              ? rangeLabelShort(slot.start, slot.end)
-              : rangeLabel(slot.start, slot.end))}
-        </button>
-      )}
-      {editable && !editing && (
-        <button
-          type="button"
-          onClick={onDelete}
-          title="블록 삭제"
-          className="absolute right-0 top-0 hidden rounded-full bg-over px-1 text-[9px] leading-4 text-paper group-hover:block"
-        >
-          ✕
-        </button>
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-
-/** stable empty reference so MemoColumn's line-sync doesn't loop */
-export const EMPTY_MEMO_LINES: Record<string, MemoLine> = {};
-
-const MEMO_A_PX: Record<MemoSize, number> = { s: 8, m: 10, l: 12 };
-const nextSize = (s: MemoSize): MemoSize =>
-  s === "s" ? "m" : s === "m" ? "l" : "s";
-
-/** the whole ruled memo column as ONE grid item — fixed row stack.
- *  each edit row keeps its red / size controls inline, right-aligned, with
- *  space reserved so focusing never shifts the layout. */
-function MemoColumn({
-  marks,
-  rowH,
-  lines,
-  mode,
-  onChange,
-  style,
-}: {
-  marks: string[];
-  rowH: number;
-  lines: Record<string, MemoLine>;
-  mode: "read" | "edit" | "none";
-  onChange?: (hhmm: string, line: MemoLine | null) => void;
-  style: React.CSSProperties;
-}) {
-  const [vals, setVals] = useState<Record<string, MemoLine>>(lines);
-  const [prevLines, setPrevLines] = useState(lines);
-  const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  if (prevLines !== lines) {
-    setPrevLines(lines);
-    setVals(lines);
-  }
-
-  const commit = (mk: string, next: MemoLine | null) => {
-    setVals((v) => {
-      const n = { ...v };
-      if (next && next.text.trim()) n[mk] = next;
-      else delete n[mk];
-      return n;
-    });
-    const tm = timers.current;
-    if (tm.has(mk)) clearTimeout(tm.get(mk)!);
-    tm.set(
-      mk,
-      setTimeout(() => {
-        onChange?.(mk, next && next.text.trim() ? next : null);
-      }, 450),
-    );
-  };
-
-  const patch = (mk: string, p: Partial<MemoLine>) => {
-    const cur = vals[mk] ?? { text: "" };
-    commit(mk, { text: cur.text, red: cur.red, size: cur.size, ...p });
-  };
-
-  return (
-    <div className="relative" style={style}>
-      {marks.map((mk) => {
-        const ln = vals[mk];
-        const size = ln?.size ?? "m";
-        if (mode === "read") {
-          return (
-            <div
-              key={mk}
-              className={clsx(
-                "flex items-center overflow-hidden border-b border-dotted border-line-strong px-2 leading-tight",
-                MEMO_PX[size],
-                ln?.red ? "font-semibold text-over" : "text-ink-2",
-              )}
-              style={{ height: rowH }}
-            >
-              {ln?.text ?? ""}
-            </div>
-          );
-        }
-        return (
-          <div
-            key={mk}
-            className="group flex items-center gap-1 border-b border-dotted border-line-strong pl-1.5 pr-1"
-            style={{ height: rowH }}
-          >
-            <input
-              value={ln?.text ?? ""}
-              onChange={(e) => patch(mk, { text: e.target.value })}
-              className={clsx(
-                "min-w-0 flex-1 bg-transparent py-0.5 leading-tight outline-none placeholder:text-line",
-                MEMO_PX[size],
-                ln?.red ? "font-semibold text-over" : "text-ink-2",
-              )}
-            />
-            <span
-              data-no-capture
-              className={clsx(
-                "flex shrink-0 items-center gap-1 transition-opacity",
-                ln?.text
-                  ? "opacity-100"
-                  : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
-              )}
-            >
-              <button
-                type="button"
-                title="빨간 강조"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => patch(mk, { red: !ln?.red })}
-                className={clsx(
-                  "h-2.5 w-2.5 rounded-full border",
-                  ln?.red ? "border-over bg-over" : "border-line-strong",
-                )}
-              />
-              <button
-                type="button"
-                title="글꼴 크기 (클릭하여 변경)"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => patch(mk, { size: nextSize(size) })}
-                className="w-3 shrink-0 text-center font-semibold leading-none text-clay/70 hover:text-clay"
-                style={{ fontSize: MEMO_A_PX[size] }}
-              >
-                A
-              </button>
-            </span>
-          </div>
-        );
-      })}
     </div>
   );
 }

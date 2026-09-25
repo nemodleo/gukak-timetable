@@ -12,6 +12,23 @@ export function indexCells(cells: Cell[]): CellIndex {
   return m;
 }
 
+/** the PUT /api/schedule row that recreates `cell` at (date, room, slot);
+ *  null clears the slot. Carries every field — color and active included —
+ *  so undo, drag-move and structural re-saves never silently reset them. */
+export function cellRow(date: string, room: string, slot: number, cell: Cell | null) {
+  if (!cell) return { date, room, slot_index: slot, kind: null };
+  return {
+    date,
+    room,
+    slot_index: slot,
+    kind: cell.kind,
+    pairing_id: cell.kind === "pairing" ? cell.pairing_id : null,
+    text: cell.kind === "block" ? cell.text : null,
+    color: cell.kind === "block" ? cell.color : null,
+    active: cell.active,
+  };
+}
+
 /** true if the cell has real content worth keeping when toggling active —
  *  a pairing assignment, or a block with a note/color. A content-less
  *  block (created purely to lock an otherwise-empty slot) doesn't. */

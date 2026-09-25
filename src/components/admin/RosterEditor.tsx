@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import type { Pairing } from "@/lib/types";
 import { badgeBg, gradeKey } from "@/lib/colors";
+import { putJson } from "@/lib/api";
 import { SectionTitle } from "../ui";
 
 type Row = Partial<Pairing> & { student_name: string };
@@ -104,21 +105,9 @@ export function RosterEditor({ defaultYm }: { defaultYm: string }) {
     }
     savingRef.current = true;
     setSaveState("saving");
-    let ok = false;
-    try {
-      const res = await fetch("/api/pairings", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ym: y, pairings: toPayload(rs) }),
-      });
-      ok = res.ok;
-      if (!ok) {
-        const j = await res.json().catch(() => ({}));
-        setMsg(`저장 실패: ${j.error ?? res.status}`);
-      }
-    } catch {
-      ok = false;
-    }
+    const err = await putJson("/api/pairings", { ym: y, pairings: toPayload(rs) });
+    const ok = !err;
+    if (err) setMsg(`저장 실패: ${err}`);
     savingRef.current = false;
     setSaveState(ok ? "saved" : "error");
     if (ok) {
