@@ -1,0 +1,20 @@
+# Supabase 무료 플랜은 7일 동안 API 요청이 없으면 프로젝트를 일시중지한다
+# (2026-11-01 실제로 멈춰 사이트가 빈 달력만 보였다). 홈 페이지를 한 번
+# 열면 서버가 설정·시간표를 DB에서 읽으므로, 며칠에 한 번 홈을 쳐서
+# 프로젝트를 깨어 있게 한다.
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "17 3 * * 1,4" # 월·목 12:17 KST
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open the home page (reads settings + timetable from Supabase)
+        run: |
+          code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 60 https://gukak-timetable.d-t-it.com/)
+          echo "home -> $code"
+          test "$code" = "200"
