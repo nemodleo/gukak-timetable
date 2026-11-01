@@ -148,3 +148,12 @@ begin
     execute format('create policy "public read %1$s" on public.%1$s for select using (true)', t);
   end loop;
 end $$;
+
+-- 로그인 실패 기록 (IP별 잠금). 서버의 service-role 키만 읽고 쓴다 — 공개 정책 없음.
+create table if not exists public.login_attempts (
+  ip           text primary key,
+  fails        int  not null default 0,
+  locked_until timestamptz,
+  updated_at   timestamptz not null default now()
+);
+alter table public.login_attempts enable row level security;
