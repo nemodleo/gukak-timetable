@@ -69,6 +69,18 @@ export function ymOf(dateIso: string): string {
   return dateIso.slice(0, 7);
 }
 
+/** calendar year + 1-based month of "today" in Korea (the server runs in UTC,
+ *  so the host clock's month can differ around midnight KST). */
+export function todayYM(now: Date = new Date()): { year: number; month: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(now);
+  const pick = (t: string) => Number(parts.find((x) => x.type === t)?.value);
+  return { year: pick("year"), month: pick("month") };
+}
+
 /** "YYYY-MM" roster/target key from a year + 1-based month */
 export function ymKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;

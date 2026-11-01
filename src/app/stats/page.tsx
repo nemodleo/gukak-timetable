@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getMonthData, getSettings } from "@/lib/data";
 import { getRole } from "@/lib/auth";
-import { isInMonth, iso, monthLabel, weeksOfMonth } from "@/lib/schedule";
+import { isInMonth, iso, monthLabel, todayYM, weeksOfMonth } from "@/lib/schedule";
 import { PageHeader, StepNav } from "@/components/ui";
 import { StatsView } from "@/components/StatsView";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
@@ -16,8 +16,9 @@ export default async function StatsPage({
   const sp = await searchParams;
   const role = await getRole();
   const base = await getSettings();
-  const y = Number(sp.y) || base.year;
-  const m = Number(sp.m) || base.month;
+  const today = todayYM();
+  const y = Number(sp.y) || today.year;
+  const m = Number(sp.m) || today.month;
 
   const total = y * 12 + (m - 1);
   const prev = { y: Math.floor((total - 1) / 12), m: ((total - 1) % 12) + 1 };

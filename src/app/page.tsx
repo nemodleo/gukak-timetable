@@ -1,6 +1,6 @@
-import { getMonthData, getSettings } from "@/lib/data";
+import { getMonthData } from "@/lib/data";
 import { getRole } from "@/lib/auth";
-import { iso, isInMonth, monthLabel, weeksOfMonth } from "@/lib/schedule";
+import { iso, isInMonth, monthLabel, todayYM, weeksOfMonth } from "@/lib/schedule";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { MonthCapture } from "@/components/MonthCapture";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
@@ -19,9 +19,10 @@ export default async function HomePage({
   searchParams: Promise<{ y?: string; m?: string }>;
 }) {
   const sp = await searchParams;
-  const base = await getSettings();
-  const y = Number(sp.y) || base.year;
-  const m = Number(sp.m) || base.month;
+  // no ?y&m → the month we're in right now (KST), not the admin's base month
+  const today = todayYM();
+  const y = Number(sp.y) || today.year;
+  const m = Number(sp.m) || today.month;
 
   const [data, role] = await Promise.all([getMonthData(y, m), getRole()]);
   const weeks = weeksOfMonth(y, m, data.settings.week_start);

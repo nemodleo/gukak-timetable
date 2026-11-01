@@ -19,6 +19,7 @@ import {
   slotsForDate,
   startOfWeek,
   startOfWeekKey,
+  todayYM,
   weekFromKey,
   weeksOfMonth,
   ymKey,
@@ -54,6 +55,16 @@ describe("iso / parseIso / addDays", () => {
     expect(iso(addDays(parseIso("2026-09-30"), 1))).toBe("2026-10-01");
     expect(iso(addDays(parseIso("2026-12-31"), 1))).toBe("2027-01-01");
     expect(iso(addDays(parseIso("2026-03-01"), -1))).toBe("2026-02-28");
+  });
+});
+
+describe("todayYM", () => {
+  it("uses the Korean calendar day, not the host (UTC) one", () => {
+    // 2026-10-31 15:30 UTC is already 2026-11-01 00:30 in Seoul
+    expect(todayYM(new Date("2026-10-31T15:30:00Z"))).toEqual({ year: 2026, month: 11 });
+    // ...but 14:30 UTC is still 10-31 23:30 KST
+    expect(todayYM(new Date("2026-10-31T14:30:00Z"))).toEqual({ year: 2026, month: 10 });
+    expect(todayYM(new Date("2026-12-31T15:00:00Z"))).toEqual({ year: 2027, month: 1 });
   });
 });
 
