@@ -1,5 +1,31 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["icn1"]
+  "regions": [
+    "icn1"
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "gukak-timetable.vercel.app"
+        }
+      ],
+      "destination": "https://gukak-timetable.d-t-it.com/",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "gukak-timetable.vercel.app"
+        }
+      ],
+      "destination": "https://gukak-timetable.d-t-it.com/:path*",
+      "permanent": true
+    }
+  ]
 }
