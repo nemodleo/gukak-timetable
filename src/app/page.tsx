@@ -1,6 +1,7 @@
 import { getMonthData } from "@/lib/data";
-import { getRole } from "@/lib/auth";
+import { authConfigured, getRole } from "@/lib/auth";
 import { iso, isInMonth, monthLabel, todayYM, weeksOfMonth } from "@/lib/schedule";
+import { LoginGate } from "@/components/LoginGate";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { MonthCapture } from "@/components/MonthCapture";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
@@ -24,7 +25,10 @@ export default async function HomePage({
   const y = Number(sp.y) || today.year;
   const m = Number(sp.m) || today.month;
 
-  const [data, role] = await Promise.all([getMonthData(y, m), getRole()]);
+  // student names are on the calendar — nothing is rendered for anonymous visitors
+  const role = await getRole();
+  if (!role) return <LoginGate configured={authConfigured()} />;
+  const data = await getMonthData(y, m);
   const weeks = weeksOfMonth(y, m, data.settings.week_start);
   const inMonthDates = weeks
     .flatMap((w) => w.days)

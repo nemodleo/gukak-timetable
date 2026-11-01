@@ -7,8 +7,9 @@ import {
   getPairingsForRange,
   getSettings,
 } from "@/lib/data";
-import { getRole } from "@/lib/auth";
+import { authConfigured, getRole } from "@/lib/auth";
 import { addDays, fmtDayHeader, iso, parseIso, startOfWeekKey } from "@/lib/schedule";
+import { LoginGate } from "@/components/LoginGate";
 import { ScheduleBoard } from "@/components/ScheduleBoard";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { Legend, PageHeader, StepNav } from "@/components/ui";
@@ -23,14 +24,16 @@ export default async function DayPage({
   const { date } = await params;
   const d = parseIso(date);
 
-  const [settings, pairings, cells, memos, dayConfigs, approvals, role] = await Promise.all([
+  const role = await getRole();
+  if (!role) return <LoginGate configured={authConfigured()} />;
+
+  const [settings, pairings, cells, memos, dayConfigs, approvals] = await Promise.all([
     getSettings(),
     getPairingsForRange(date, date),
     getCells(date, date),
     getMemos(date, date),
     getDayConfigs(date, date),
     getDayApprovals(date, date),
-    getRole(),
   ]);
 
   const prev = iso(addDays(d, -1));

@@ -68,14 +68,17 @@ Also served straight from the app at `/docs/admin` · `/docs/instructor` · `/do
 
 | Role | How they get in | What they can do |
 | --- | --- | --- |
-| **Student** | no login | read-only: month, week, day; PNG export. No stats. |
+| **Viewer** (students, parents) | `VIEWER_PASSWORD` | read-only: month, week, day; PNG export. No stats. |
 | **Instructor** | `INSTRUCTOR_PASSWORD` | + view stats, assign a pairing to a cell, edit day memos |
 | **Admin** | `ADMIN_PASSWORD` | + no-class blocks, room/time-block structure, per-month roster & targets, settings, import/export |
 
 A signed-in user still has to flip the **View / Edit** toggle before the grid accepts
 changes. Auth is a signed HMAC cookie (`<role>.<timestamp>.<signature>`) — there are no
 user accounts, one shared password per role. Set `ADMIN_SESSION_SECRET` in production so
-tokens are not signed with the password itself.
+tokens are not signed with the password itself. Nothing is served without a login — the
+timetable carries student names. Wrong passwords are throttled per client IP: 4 free
+guesses, then a 5-minute lock that doubles on every further miss (max 1 hour). Attempts
+are kept in the `login_attempts` table (falls back to per-instance memory if it is missing).
 
 ### Data model (Supabase / Postgres)
 
@@ -166,7 +169,7 @@ sample and shows a "demo mode" banner. (`predev`/`prebuild`/`pretest` run
    | `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
    | `SUPABASE_ANON_KEY` | Project Settings → API → `anon` public |
    | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → `service_role` (server only) |
-   | `ADMIN_PASSWORD`, `INSTRUCTOR_PASSWORD` | any strings |
+   | `ADMIN_PASSWORD`, `INSTRUCTOR_PASSWORD`, `VIEWER_PASSWORD` | any strings |
    | `ADMIN_SESSION_SECRET` | any long random string |
 
 4. `npm run dev`, open `/admin`, log in, and use **Data → "JSON 파일 선택"** to import a

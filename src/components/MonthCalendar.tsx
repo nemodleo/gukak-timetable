@@ -21,7 +21,7 @@ import { LockIcon } from "./ui";
 import { saveDayApprovals, withApproval } from "@/lib/api";
 import { usePaintDrag } from "@/lib/usePaintDrag";
 
-type Role = "admin" | "instructor" | null;
+type Role = "admin" | "instructor" | "viewer" | null;
 
 export function MonthCalendar({
   weeks,
@@ -176,7 +176,7 @@ export function MonthCalendar({
                 const count = usedCount.get(date) ?? 0;
                 const pct = available > 0 ? used / available : 0;
                 const locked = !approved.has(date);
-                const showLockBadge = role != null && locked;
+                const showLockBadge = (role === "admin" || role === "instructor") && locked;
 
                 const inMonthBg = !inMonth
                   ? {

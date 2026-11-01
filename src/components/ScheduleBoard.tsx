@@ -6,7 +6,7 @@ import type { Cell, DayConfig, DayMemo, Pairing, Settings } from "@/lib/types";
 import { ScheduleEditor } from "./admin/ScheduleEditor";
 import { StatsSidebar } from "./StatsSidebar";
 
-type Role = "admin" | "instructor" | null;
+type Role = "admin" | "instructor" | "viewer" | null;
 
 interface EditorProps {
   settings: Settings;
@@ -22,31 +22,31 @@ interface EditorProps {
 }
 
 /** role-aware wrapper:
- *  - not logged in → read-only (학생); log in from the header 강사/관리자 button
+ *  - viewer        → read-only (학생·학부모, 열람 비밀번호)
  *  - instructor    → 보기 / 편집 toggle, cell + memo editing
  *  - admin         → + grid structure editing & drag-paint */
 export function ScheduleBoard({
   role,
   ...editorProps
 }: { role: Role } & EditorProps) {
-  const [mode, setMode] = useState<"view" | "edit">(role ? "edit" : "view");
+  const editor = role === "admin" || role === "instructor";
+  const [mode, setMode] = useState<"view" | "edit">(editor ? "edit" : "view");
   const isAdmin = role === "admin";
-  const loggedIn = role != null;
 
   return (
     <div
       className={clsx(
         "flex flex-col gap-5",
-        loggedIn && "lg:flex-row-reverse lg:items-start",
+        editor && "lg:flex-row-reverse lg:items-start",
       )}
     >
       <div className="min-w-0 space-y-3 lg:flex-1">
         <ScheduleEditor
           {...editorProps}
           isAdmin={isAdmin}
-          readOnly={mode === "view" || !loggedIn}
+          readOnly={mode === "view" || !editor}
           viewToggle={
-            loggedIn && (
+            editor && (
               <div
                 className="flex shrink-0 gap-1 rounded-full border bg-paper p-1 text-[13px]"
                 data-no-capture
@@ -71,7 +71,7 @@ export function ScheduleBoard({
       </div>
 
       {/* 강사·관리자만 — 시간표 옆에서 바로 확인, 모바일에서는 아래로 */}
-      {loggedIn && (
+      {editor && (
         <aside className="lg:w-64 lg:shrink-0" data-no-capture>
           <StatsSidebar
             year={editorProps.year}

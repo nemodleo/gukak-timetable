@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
-import { requireAdmin, requireDaysApproved, requireDb, requireEditor } from "../_guard";
+import { requireAdmin, requireDaysApproved, requireDb, requireEditor, requireLogin } from "../_guard";
 import { getCells } from "@/lib/data";
 
 // 칸 PUT: 배정(pairing) = 강사+관리자. 비수업(block) 칸의 생성/수정/삭제 = 관리자만.
@@ -26,6 +26,8 @@ interface InCell {
 }
 
 export async function GET(req: Request) {
+  const unauth = await requireLogin();
+  if (unauth) return unauth;
   const u = new URL(req.url);
   const from = u.searchParams.get("from");
   const to = u.searchParams.get("to");

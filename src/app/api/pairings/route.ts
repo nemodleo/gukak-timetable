@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, requireDb } from "../_guard";
+import { requireAdmin, requireDb, requireLogin } from "../_guard";
 import { getPairings, getSettings } from "@/lib/data";
 import { ymKey } from "@/lib/schedule";
 
@@ -46,6 +46,8 @@ async function resolveYm(req: Request): Promise<string> {
 }
 
 export async function GET(req: Request) {
+  const unauth = await requireLogin();
+  if (unauth) return unauth;
   return NextResponse.json(await getPairings(await resolveYm(req)));
 }
 

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getMonthData, getSettings } from "@/lib/data";
-import { getRole } from "@/lib/auth";
+import { authConfigured, getRole, isEditorRole } from "@/lib/auth";
 import { isInMonth, iso, monthLabel, todayYM, weeksOfMonth } from "@/lib/schedule";
 import { PageHeader, StepNav } from "@/components/ui";
+import { LoginGate } from "@/components/LoginGate";
 import { StatsView } from "@/components/StatsView";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 
@@ -15,6 +16,7 @@ export default async function StatsPage({
 }) {
   const sp = await searchParams;
   const role = await getRole();
+  if (!role) return <LoginGate configured={authConfigured()} />;
   const base = await getSettings();
   const today = todayYM();
   const y = Number(sp.y) || today.year;
@@ -26,7 +28,8 @@ export default async function StatsPage({
   const prevHref = `/stats?y=${prev.y}&m=${prev.m}`;
   const nextHref = `/stats?y=${next.y}&m=${next.m}`;
 
-  const data = role ? await getMonthData(y, m) : null;
+  // viewers (학생·학부모) see the timetable only, not the target-hour stats
+  const data = isEditorRole(role) ? await getMonthData(y, m) : null;
   // clip every week to the selected month — weeks spill into neighbouring months
   const weeks =
     data &&
@@ -56,9 +59,7 @@ export default async function StatsPage({
         />
       ) : (
         <p className="rounded-lg border bg-paper px-4 py-3 text-[13px] text-ink-3">
-          통계는 로그인한 강사·관리자만 볼 수 있습니다. 오른쪽 위에서{" "}
-          <span className="font-medium text-ink-2">강사</span> 또는{" "}
-          <span className="font-medium text-ink-2">관리자</span>로 로그인하세요.{" "}
+          통계는 강사·관리자만 볼 수 있습니다. 열람 계정으로는 시간표만 볼 수 있습니다.{" "}
           <Link href="/" className="text-clay underline underline-offset-4">
             월간 시간표로 돌아가기
           </Link>

@@ -7,8 +7,9 @@ import {
   getPairingsForRange,
   getSettings,
 } from "@/lib/data";
-import { getRole } from "@/lib/auth";
+import { authConfigured, getRole } from "@/lib/auth";
 import { addDays, iso, weekFromKey, weekRangeLabel } from "@/lib/schedule";
+import { LoginGate } from "@/components/LoginGate";
 import { ScheduleBoard } from "@/components/ScheduleBoard";
 import { ArrowKeyNav } from "@/components/ArrowKeyNav";
 import { Legend, PageHeader, StepNav } from "@/components/ui";
@@ -25,14 +26,16 @@ export default async function WeekPage({
   const from = iso(week.start);
   const to = iso(week.end);
 
-  const [settings, pairings, cells, memos, dayConfigs, approvals, role] = await Promise.all([
+  const role = await getRole();
+  if (!role) return <LoginGate configured={authConfigured()} />;
+
+  const [settings, pairings, cells, memos, dayConfigs, approvals] = await Promise.all([
     getSettings(),
     getPairingsForRange(from, to),
     getCells(from, to),
     getMemos(from, to),
     getDayConfigs(from, to),
     getDayApprovals(from, to),
-    getRole(),
   ]);
 
   const prevKey = iso(addDays(week.start, -7));

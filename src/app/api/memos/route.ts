@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireDaysApproved, requireDb, requireEditor } from "../_guard";
+import { requireDaysApproved, requireDb, requireEditor, requireLogin } from "../_guard";
 import { getMemos } from "@/lib/data";
 import type { MemoLine, MemoSize } from "@/lib/types";
 
@@ -8,6 +8,8 @@ import type { MemoLine, MemoSize } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const unauth = await requireLogin();
+  if (unauth) return unauth;
   const u = new URL(req.url);
   const from = u.searchParams.get("from");
   const to = u.searchParams.get("to");

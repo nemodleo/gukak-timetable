@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, requireDb } from "../_guard";
+import { requireAdmin, requireDb, requireLogin } from "../_guard";
 import { getDayApprovals } from "@/lib/data";
 
 // 날짜 승인(잠금 해제) = 관리자만. 기본은 잠금 — 승인된 날짜만 강사가
@@ -8,6 +8,8 @@ import { getDayApprovals } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const unauth = await requireLogin();
+  if (unauth) return unauth;
   const u = new URL(req.url);
   const from = u.searchParams.get("from");
   const to = u.searchParams.get("to");

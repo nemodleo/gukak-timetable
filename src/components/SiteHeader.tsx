@@ -17,7 +17,7 @@ export function SiteHeader({
   role,
 }: {
   schoolName: string;
-  role: "admin" | "instructor" | null;
+  role: "admin" | "instructor" | "viewer" | null;
 }) {
   const pathname = usePathname();
   const pill =
@@ -36,7 +36,7 @@ export function SiteHeader({
         </Link>
 
         <nav className="flex min-w-0 items-center gap-0.5 sm:gap-1">
-          {NAV.filter((n) => !n.auth || role).map((n) => {
+          {NAV.filter((n) => !n.auth || role === "admin" || role === "instructor").map((n) => {
             const active =
               n.href === "/" ? pathname === "/" : pathname.startsWith(n.href);
             return (
@@ -66,7 +66,7 @@ function AuthControl({
   role,
   adminActive,
 }: {
-  role: "admin" | "instructor" | null;
+  role: "admin" | "instructor" | "viewer" | null;
   adminActive: boolean;
 }) {
   const router = useRouter();
@@ -95,7 +95,7 @@ function AuthControl({
           </Link>
         )}
         <span className="rounded-full bg-paper-2 px-2 py-1 text-[11px] font-medium text-ink-2 sm:px-2.5 sm:text-[12px]">
-          {role === "admin" ? "관리자" : "강사"}
+          {role === "admin" ? "관리자" : role === "instructor" ? "강사" : "열람"}
         </span>
         <button
           type="button"

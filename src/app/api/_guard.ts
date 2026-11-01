@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
-import { canEdit, isAdmin } from "@/lib/auth";
+import { canEdit, isAdmin, isLoggedIn } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabaseServer";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function requireAdmin(): Promise<NextResponse | null> {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "관리자 인증이 필요합니다." }, { status: 401 });
+  }
+  return null;
+}
+
+/** any role, viewer included — the timetable carries student names, so even
+ *  reads need a login */
+export async function requireLogin(): Promise<NextResponse | null> {
+  if (!(await isLoggedIn())) {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
   return null;
 }

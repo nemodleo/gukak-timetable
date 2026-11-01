@@ -18,11 +18,11 @@ export const MANUALS: Record<ManualSlug, { file: string; title: string; desc: st
   student: {
     file: "student-manual.md",
     title: "학생 매뉴얼",
-    desc: "로그인 없이 보는 학생용 — 월→주→일 보기, 색·빗금 의미, 내 시간표 이미지 저장.",
+    desc: "열람 비밀번호로 보는 학생용 — 월→주→일 보기, 색·빗금 의미, 내 시간표 이미지 저장.",
   },
 };
 
-/** 관리자 = 전체, 강사 = 강사·학생, 학생(비로그인) = 학생 매뉴얼만. */
+/** 관리자 = 전체, 강사 = 강사·학생, 열람·비로그인 = 학생 매뉴얼만. */
 export function visibleManuals(role: Role | null): ManualSlug[] {
   if (role === "admin") return ["admin", "instructor", "student"];
   if (role === "instructor") return ["instructor", "student"];

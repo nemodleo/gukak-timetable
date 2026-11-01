@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, requireDb } from "../_guard";
+import { requireAdmin, requireDb, requireLogin } from "../_guard";
 import { getSettings } from "@/lib/data";
 import { DEFAULT_SETTINGS } from "@/lib/types";
 import {
@@ -12,6 +12,8 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauth = await requireLogin();
+  if (unauth) return unauth;
   return NextResponse.json(await getSettings());
 }
 

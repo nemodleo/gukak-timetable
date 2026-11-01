@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, requireDb } from "../_guard";
+import { requireAdmin, requireDb, requireLogin } from "../_guard";
 import { getDayConfigs } from "@/lib/data";
 import type { SlotDef } from "@/lib/types";
 
@@ -8,6 +8,8 @@ import type { SlotDef } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const unauth = await requireLogin();
+  if (unauth) return unauth;
   const u = new URL(req.url);
   const from = u.searchParams.get("from");
   const to = u.searchParams.get("to");
