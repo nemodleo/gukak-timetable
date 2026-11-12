@@ -16,7 +16,7 @@ export function LoginGate({ configured }: { configured: boolean }) {
   return (
     <div className="mx-auto max-w-sm rounded-lg border bg-paper px-6 py-8">
       <h1 className="font-serif text-xl font-medium">로그인</h1>
-      <p className="mt-1 text-[13px] leading-relaxed text-ink-2">
+      <p className="mt-1 break-keep text-[13px] leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
         시간표에는 학생 이름이 있어 로그인한 사람만 볼 수 있습니다. 학생·학부모는{" "}
         <strong>열람 비밀번호</strong>, 강사·관리자는 각자의 비밀번호를 입력하세요.
       </p>
@@ -65,7 +65,7 @@ export function LoginGate({ configured }: { configured: boolean }) {
           {busy ? "확인 중…" : "로그인"}
         </button>
       </form>
-      <p className="mt-4 text-[13px] leading-relaxed text-ink-2">
+      <p className="mt-4 break-keep text-[13px] leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
         비밀번호가 없거나 시간표에 관해 물어볼 것이 있으면{" "}
         <a
           href={`mailto:${CONTACT_EMAIL}`}

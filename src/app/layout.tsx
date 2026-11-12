@@ -65,7 +65,7 @@ export default async function RootLayout({
           </main>
           {/* 사이트 꼬리 — 로그인한 선생님도 연락처를 찾을 수 있게. 인쇄·이미지 저장에서는 빠짐 */}
           <footer
-            className="no-print mx-auto flex max-w-[1400px] flex-wrap gap-x-3 gap-y-1 border-t border-line px-4 py-4 text-[13px] text-ink-2 sm:px-8"
+            className="no-print mx-auto flex max-w-[1400px] flex-wrap gap-x-3 gap-y-1 break-keep border-t border-line px-4 py-4 text-[13px] text-ink-2 [overflow-wrap:anywhere] sm:px-8"
             data-no-capture
           >
             <span>국립국악고등학교 강사·강의실 시간표</span>
