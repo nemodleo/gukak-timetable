@@ -1,19 +1,19 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="board-size" content="390x844"><title>00-current-login</title><link rel="stylesheet" href="../assets/gukak.css"></head>
-<body style="min-height:844px;display:flex;flex-direction:column">
-<!-- 지금 버전 · 2026-11-12 · C안 반영(카드 꼬리 연락 줄 + 모든 화면 꼬리). 커밋 d9299ce -->
+<body style="position:relative;min-height:844px">
+<!-- 지금 버전 · 2026-11-12 · 공지 모달 A안 · 커밋 07b5671 -->
 <header class="hdr"><a class="logo" href="#">시간표 <span class="school" style="font-family:var(--font-sans);font-size:12px;color:var(--color-ink-3);font-weight:400">국립국악고등학교</span></a><nav><button class="pill on">월간</button><button class="pill">매뉴얼</button><span class="sep"></span><button class="pill">강사</button><button class="pill">관리자</button></nav></header>
-<main style="flex:1">
-  <div class="card">
-    <h1>로그인</h1>
-    <p class="lede" style="color:var(--color-ink-2)">시간표에는 학생 이름이 있어 로그인한 사람만 볼 수 있습니다. 학생·학부모는 <strong>열람 비밀번호</strong>, 강사·관리자는 각자의 비밀번호를 입력하세요.</p>
-    <div class="field"><label for="pw">비밀번호</label><input id="pw" class="input" type="password"></div>
-    <button class="btn">로그인</button>
-    <p class="foot" style="color:var(--color-ink-2)">비밀번호가 없거나 시간표에 관해 물어볼 것이 있으면 <a class="mail" href="mailto:gukak-timetable@d-t-it.com">gukak-timetable@d-t-it.com</a> 으로 메일을 주세요. 여러 번 틀리면 잠시 잠깁니다.</p>
-  </div>
-</main>
-<footer class="site-foot"><span>국립국악고등학교 강사·강의실 시간표</span><span>문의 <a class="mail" href="mailto:gukak-timetable@d-t-it.com">gukak-timetable@d-t-it.com</a></span></footer>
-<aside class="note">
-  <h2>로그인 (비로그인 첫 화면)</h2>
-  <div class="states" style="border-top:0;margin-top:0;padding-top:0"><b>상태</b> — 기본 · 기다림: 로딩 버튼 "확인 중…"(누른 뒤 비활성) · 오류: 인라인 오류(틀림 / N회 남음 / 잠김 N분) 버튼 아래 · 빈 화면: 없음(입력 화면) · 끝남: 없음(로그인되면 달력으로 바뀜)</div>
+<main><div class="card"><h1>로그인</h1><p class="lede" style="color:var(--color-ink-2)">시간표에는 학생 이름이 있어 로그인한 사람만 볼 수 있습니다. 학생·학부모는 <strong>열람 비밀번호</strong>, 강사·관리자는 각자의 비밀번호를 입력하세요.</p><div class="field"><label for="pw">비밀번호</label><input id="pw" class="input" type="password"></div><button class="btn">로그인</button><p class="foot" style="color:var(--color-ink-2)">비밀번호가 없거나 시간표에 관해 물어볼 것이 있으면 <a class="mail" href="mailto:gukak-timetable@d-t-it.com">gukak-timetable@d-t-it.com</a> 으로 메일을 주세요. 여러 번 틀리면 잠시 잠깁니다.</p></div></main>
+<div class="scrim" role="presentation"></div>
+<div class="dialog" role="dialog" aria-labelledby="nt" aria-modal="true">
+  <div class="eyebrow">안내</div>
+  <h2 id="nt">국악고 선생님께</h2>
+  <p>이 사이트는 국립국악고등학교 강사·강의실 시간표를 보고 짜는 곳입니다. 학생 이름이 있어 비밀번호가 있어야 열립니다.</p>
+  <p>서비스는 언제나 열려 있습니다. 비밀번호를 받으시려면, 기능을 고치거나 더하고 싶으시면, 운영에 관해 물어볼 것이 있으면 아래 주소로 메일을 주세요.</p>
+  <a class="addr" href="mailto:gukak-timetable@d-t-it.com">gukak-timetable@d-t-it.com</a>
+  <div class="row"><button class="btn ghost">닫기</button><a class="btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="mailto:gukak-timetable@d-t-it.com">메일 보내기</a></div>
+</div>
+<aside class="note" style="position:absolute;left:0;right:0;top:700px">
+  <h2>로그인 (비로그인 첫 화면) — 공지 모달이 먼저</h2>
+  <div class="states" style="border-top:0;margin-top:0;padding-top:0"><b>상태</b> — 기본: 모달 열림(닫기 버튼에 포커스, Esc·바깥 누름으로도 닫힘) · 닫음: 로그인 카드만(그 탭에서는 다시 안 뜸, 새로 들어오면 다시) · 로그인 카드: 기다림 "확인 중…" · 오류 인라인(틀림/N회 남음/잠김) · 빈 화면 없음 · 끝남: 로그인되면 달력 / 메일 앱으로</div>
 </aside>
 </body></html>
