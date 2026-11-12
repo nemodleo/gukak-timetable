@@ -46,7 +46,7 @@ export function LoginGate({ configured }: { configured: boolean }) {
           }
         }}
       >
-        <label htmlFor="login-pw" className="label-eyebrow block text-[12px]">
+        <label htmlFor="login-pw" className="mb-1.5 block text-[12px] font-semibold tracking-wide text-ink-2">
           비밀번호
         </label>
         <PasswordInput
