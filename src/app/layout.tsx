@@ -13,6 +13,7 @@ import {
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { InactiveStyleProvider } from "@/lib/inactiveStyleContext";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "국악고 시간표",
@@ -62,6 +63,22 @@ export default async function RootLayout({
             )}
             {children}
           </main>
+          {/* 사이트 꼬리 — 로그인한 선생님도 연락처를 찾을 수 있게. 인쇄·이미지 저장에서는 빠짐 */}
+          <footer
+            className="no-print mx-auto flex max-w-[1400px] flex-wrap gap-x-3 gap-y-1 border-t border-line px-4 py-4 text-[13px] text-ink-2 sm:px-8"
+            data-no-capture
+          >
+            <span>국립국악고등학교 강사·강의실 시간표</span>
+            <span>
+              문의{" "}
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="underline decoration-clay underline-offset-4"
+              >
+                {CONTACT_EMAIL}
+              </a>
+            </span>
+          </footer>
         </InactiveStyleProvider>
         <Analytics />
       </body>

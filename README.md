@@ -267,6 +267,12 @@ scripts/
 
 ---
 
+## Contact
+
+Questions, password requests and timetable corrections: **gukak-timetable@d-t-it.com** (Korean
+or English). The address lives in the repo-root `CONTACT` file; change it everywhere with
+`make contact EMAIL=new@example.com`. The login card and the site footer link to it.
+
 ## License
 
 Source code is released under the [MIT License](LICENSE). The real timetable data it is

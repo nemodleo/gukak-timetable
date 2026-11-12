@@ -10,6 +10,7 @@
 #   make deploy     Vercel 프로덕션 배포 (check 후)
 #   make env-push   .env.local 의 환경변수를 Vercel(prod/preview/dev)에 등록
 #   make env-pull   Vercel 환경변수를 .env.local 로 내려받기
+#   make contact    연락 메일 바꾸기 (make contact EMAIL=new@example.com)
 
 SHELL       := /bin/bash
 NPM         ?= npm
@@ -21,7 +22,7 @@ ENV_SCOPES  ?= production preview development
 
 .DEFAULT_GOAL := help
 .PHONY: help setup install venv dev seed test build lint check clean \
-        link preview deploy env-push env-pull
+        link preview deploy env-push env-pull contact
 
 help:
 	@grep -E '^#   make' $(MAKEFILE_LIST) | sed 's/^#   /  /'
@@ -89,3 +90,8 @@ env-push:
 
 env-pull:
 	$(VERCEL) env pull $(ENV_FILE)
+
+## --- 연락 메일 ---------------------------------------------------------
+# CONTACT 한 줄이 기준. 저장소 문서의 옛 주소를 새 주소로 바꾼다 (git 밖·호스팅 환경 값은 끝에 알려 주고 손으로).
+contact:
+	./tools/set_contact.sh $(EMAIL)

@@ -20,7 +20,9 @@ export function PasswordInput({
   className,
   placeholder,
   autoFocus,
+  id,
 }: {
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   className?: string;
@@ -48,6 +50,7 @@ export function PasswordInput({
   return (
     <div className="relative">
       <input
+        id={id}
         type="password"
         autoComplete="off"
         autoCorrect="off"
