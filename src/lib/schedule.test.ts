@@ -19,6 +19,7 @@ import {
   slotsForDate,
   startOfWeek,
   startOfWeekKey,
+  todayKST,
   todayYM,
   weekFromKey,
   weeksOfMonth,
@@ -65,6 +66,14 @@ describe("todayYM", () => {
     // ...but 14:30 UTC is still 10-31 23:30 KST
     expect(todayYM(new Date("2026-10-31T14:30:00Z"))).toEqual({ year: 2026, month: 10 });
     expect(todayYM(new Date("2026-12-31T15:00:00Z"))).toEqual({ year: 2027, month: 1 });
+  });
+});
+
+describe("todayKST", () => {
+  it("rolls over at Korean midnight", () => {
+    expect(todayKST(new Date("2026-11-12T14:59:00Z"))).toBe("2026-11-12"); // 23:59 KST
+    expect(todayKST(new Date("2026-11-12T15:00:00Z"))).toBe("2026-11-13"); // 00:00 KST
+    expect(todayKST(new Date("2026-12-31T15:30:00Z"))).toBe("2027-01-01");
   });
 });
 

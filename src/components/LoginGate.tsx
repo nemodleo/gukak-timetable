@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PasswordInput } from "./PasswordInput";
 import { CONTACT_EMAIL } from "@/lib/contact";
-import { NoticeDialog } from "./NoticeDialog";
 
 /** Shown in place of any timetable page when nobody is logged in. One
  *  password box: the role comes from which password it is (열람 / 강사 / 관리자). */
@@ -16,8 +15,6 @@ export function LoginGate({ configured }: { configured: boolean }) {
 
   return (
     <div className="mx-auto max-w-sm rounded-lg border bg-paper px-6 py-8">
-      {/* 처음 온 선생님에게 연락처를 먼저 — 닫으면 이 탭에서는 다시 안 뜬다 */}
-      <NoticeDialog />
       <h1 className="font-serif text-xl font-medium">로그인</h1>
       <p className="mt-1 break-keep text-[13px] leading-relaxed text-ink-2 [overflow-wrap:anywhere]">
         시간표에는 학생 이름이 있어 로그인한 사람만 볼 수 있습니다. 학생·학부모는{" "}

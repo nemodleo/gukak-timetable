@@ -81,6 +81,17 @@ export function todayYM(now: Date = new Date()): { year: number; month: number }
   return { year: pick("year"), month: pick("month") };
 }
 
+/** "YYYY-MM-DD" of today in Korea — for "오늘 하루" style flags that must roll
+ *  over at KST midnight, not the host's (UTC) midnight. */
+export function todayKST(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
 /** "YYYY-MM" roster/target key from a year + 1-based month */
 export function ymKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, "0")}`;

@@ -11,6 +11,7 @@ import {
   DEFAULT_INACTIVE_PATTERN_COLOR,
 } from "@/lib/types";
 import { SiteHeader } from "@/components/SiteHeader";
+import { NoticeDialog } from "@/components/NoticeDialog";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { InactiveStyleProvider } from "@/lib/inactiveStyleContext";
 import Link from "next/link";
@@ -85,6 +86,8 @@ export default async function RootLayout({
               </a>
             </span>
           </footer>
+          {/* 공지 — 모든 화면·모든 사람에게 먼저(닫기는 그 탭만, 오늘 하루 보지 않기는 그날까지) */}
+          <NoticeDialog />
         </InactiveStyleProvider>
         <Analytics />
       </body>

@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CONTACT_EMAIL } from "@/lib/contact";
+import { noticeHidden } from "@/lib/notice";
+import { todayKST } from "@/lib/schedule";
 
-const KEY = "gkt_notice_closed";
+const TAB_KEY = "gkt_notice_closed"; // sessionStorage: 이 탭에서 닫음
+const DAY_KEY = "gkt_notice_hidden_on"; // localStorage: "오늘 하루 보지 않기"를 누른 한국 날짜
 
-/* 닫힘 여부는 sessionStorage가 원본 — useSyncExternalStore로 읽어 서버 렌더(닫힘)와
+/* 숨김 여부는 브라우저 저장소가 원본 — useSyncExternalStore로 읽어 서버 렌더(숨김)와
  * 클라이언트(저장소 값)가 어긋나도 하이드레이션 오류 없이 넘어간다. */
 const listeners = new Set<() => void>();
 function subscribe(cb: () => void) {
@@ -14,33 +17,44 @@ function subscribe(cb: () => void) {
     listeners.delete(cb);
   };
 }
-function readClosed(): boolean {
+function read(store: () => Storage, key: string): string | null {
   try {
-    return sessionStorage.getItem(KEY) === "1";
+    return store().getItem(key);
   } catch {
-    return false; // 저장소를 못 쓰면 매번 띄운다
+    return null; // 저장소를 못 쓰면 매번 띄운다
   }
 }
-function markClosed() {
+function write(store: () => Storage, key: string, value: string) {
   try {
-    sessionStorage.setItem(KEY, "1");
+    store().setItem(key, value);
   } catch {
     /* ignore */
   }
   listeners.forEach((l) => l());
 }
+function readHidden(): boolean {
+  return noticeHidden({
+    closedThisTab: read(() => sessionStorage, TAB_KEY) === "1",
+    hiddenOn: read(() => localStorage, DAY_KEY),
+    today: todayKST(),
+  });
+}
 
-/** 비로그인 첫 진입 때 로그인 카드 위에 먼저 뜨는 공지 모달. 처음 오는
- *  국악고 선생님이 비밀번호·수정·운영 문의를 어디로 보낼지 바로 알 수 있게.
- *  닫으면 그 탭(sessionStorage)에서는 다시 안 뜨고, 새로 들어오면 다시 뜬다. */
+/** 모든 화면에 먼저 뜨는 공지 모달(로그인 여부와 상관없이). 국악고 선생님이
+ *  비밀번호·수정·운영 문의를 어디로 보낼지 바로 알 수 있게.
+ *  닫기 = 그 탭에서만 숨김 · 오늘 하루 보지 않기 = 그 브라우저에서 한국 날짜로 오늘까지 숨김. */
 export function NoticeDialog() {
-  const storedClosed = useSyncExternalStore(subscribe, readClosed, () => true);
+  const storedHidden = useSyncExternalStore(subscribe, readHidden, () => true);
   const [closedHere, setClosedHere] = useState(false); // 저장소가 막혀도 닫히게
-  const open = !storedClosed && !closedHere;
+  const open = !storedHidden && !closedHere;
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const close = () => {
-    markClosed();
+    write(() => sessionStorage, TAB_KEY, "1");
+    setClosedHere(true);
+  };
+  const hideToday = () => {
+    write(() => localStorage, DAY_KEY, todayKST());
     setClosedHere(true);
   };
 
@@ -58,12 +72,13 @@ export function NoticeDialog() {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-ink/45" onClick={close} role="presentation" />
+      <div className="no-print fixed inset-0 z-40 bg-ink/45" onClick={close} role="presentation" data-no-capture />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="gkt-notice-title"
-        className="fixed left-4 right-4 top-[14vh] z-50 mx-auto max-w-sm break-keep rounded-xl border border-line bg-paper px-5 py-6 shadow-2xl [overflow-wrap:anywhere]"
+        data-no-capture
+        className="no-print fixed left-4 right-4 top-[14vh] z-50 mx-auto max-w-sm break-keep rounded-xl border border-line bg-paper px-5 py-6 shadow-2xl [overflow-wrap:anywhere]"
       >
         <p className="text-[12px] font-semibold tracking-wide text-ink-2">안내</p>
         <h2 id="gkt-notice-title" className="mt-1.5 font-serif text-[20px] font-medium leading-snug">
@@ -99,6 +114,13 @@ export function NoticeDialog() {
             메일 보내기
           </a>
         </div>
+        <button
+          type="button"
+          onClick={hideToday}
+          className="mt-2 h-11 w-full text-[13px] text-ink-2 underline decoration-line-strong underline-offset-4"
+        >
+          오늘 하루 보지 않기
+        </button>
       </div>
     </>
   );
