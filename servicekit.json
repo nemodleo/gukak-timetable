@@ -161,8 +161,8 @@
       ],
       "verified": {
         "date": "2026-11-12",
-        "what": "운영 주소에는 아직 안 나감(브랜치, 합친 뒤 curl로 다시) · 로컬 build의 robots.txt = 'User-Agent: * / Disallow: /', 서버 번들에 robots{index:false,follow:false} · sitemap·canonical·IndexNow n/a(색인 대상 없음)",
-        "result": "partial"
+        "what": "운영 robots.txt = 'User-Agent: * / Disallow: /' · 홈에 <meta name=robots content='noindex, nofollow'> · sitemap·canonical·IndexNow n/a(로그인 뒤 도구라 색인 대상 없음)",
+        "result": "ok"
       }
     },
     "privacy": {
