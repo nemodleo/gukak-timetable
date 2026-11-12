@@ -1,0 +1,245 @@
+{
+  "name": {
+    "ko": "국악고 시간표",
+    "en": "Gukak Timetable"
+  },
+  "site": "https://gukak-timetable.d-t-it.com/",
+  "domain": "d-t-it.com",
+  "host": "gukak-timetable",
+  "contact": "file:CONTACT",
+  "langs": [
+    "ko"
+  ],
+  "modules": {
+    "contact": {
+      "file": "CONTACT",
+      "since": "ef06575",
+      "files": [
+        "CONTACT",
+        "tools/set_contact.sh",
+        "Makefile",
+        "src/lib/contact.ts",
+        "src/components/NoticeDialog.tsx",
+        "src/components/LoginGate.tsx",
+        "src/app/layout.tsx"
+      ],
+      "adapted": "앱은 빌드 때 CONTACT를 읽지 않고 src/lib/contact.ts 리터럴을 쓴다 — set_contact.sh가 git grep으로 함께 바꾼다. 화면은 비로그인 첫 진입 공지 모달 + 로그인 카드 꼬리 + 사이트 꼬리 세 곳(2026-11-12 디자인 결정). 받기는 Cloudflare Email Routing",
+      "skipped": [],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "check_route gukak-timetable@d-t-it.com → 250 받는 주소. 다른 계정에서 실제 한 통 보내기(쓰기)는 사용자 몫으로 남김",
+        "result": "ok"
+      }
+    },
+    "domain": {
+      "since": "ef06575",
+      "files": [
+        "vercel.json"
+      ],
+      "adapted": "Vercel CNAME(cname.vercel-dns.com, 프록시 꺼짐)은 Cloudflare 대시보드에서 손으로. 옛 gukak-timetable.vercel.app은 vercel.json host 조건 308",
+      "skipped": [],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "domains.json에 gukak-timetable 줄 있음 · check_dns --host ✓ cname.vercel-dns.com · whois 등록자 DATA REDACTED · 도메인 메일 레코드는 이번에 안 바꿈(n/a)",
+        "result": "ok"
+      }
+    },
+    "design": {
+      "canvas": "docs/design/screens",
+      "since": "ef06575",
+      "files": [
+        "docs/design/screens/00-current-login.html",
+        "docs/design/screens/90-decision-contact.html",
+        "docs/design/assets/gukak.css"
+      ],
+      "adapted": "Easel 형식 HTML 보드를 저장소에. 토큰 원본은 src/app/globals.css, 캔버스 쪽은 assets/gukak.css 미러(tokens.json 없음). 지금 버전 보드는 로그인 화면 하나뿐 — 로그인 뒤 화면 보드는 아직 없음",
+      "skipped": [
+        {
+          "part": "로그인 뒤 화면(월·주·일·통계·관리자)의 00-current 보드",
+          "why": "이번에 바뀐 화면이 아님 — 그 화면을 바꿀 때 만든다"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "00-current-login render_check ✓ · 운영 주소 render_check --break-api ✓(빈 화면 아님) · copy_check·--brief 걸린 것 없음 · tokens_check 어긋남 없음 · 보드 머리 날짜·커밋 올림 · 열린 제안 보드 50-proposal-20261112-privacy-A 하나(승인 대기, notes)",
+        "result": "ok"
+      }
+    },
+    "cron": {
+      "since": "ef06575",
+      "files": [
+        ".github/workflows/keep-alive.yml"
+      ],
+      "adapted": "부르는 비밀 끝점 없이 공개 홈 GET만(무료 Supabase 깨우기, 월·목)",
+      "skipped": [
+        {
+          "part": "수집 끝점 + data 브랜치 백업",
+          "why": "모아 오는 자료가 없음"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "gh run list keep-alive: 11-05·11-09·11-12 예약 실행 모두 success · 부르는 비밀 끝점·잠금은 없음(n/a, 공개 홈 GET만)",
+        "result": "ok"
+      }
+    },
+    "server": {
+      "since": "ef06575",
+      "files": [
+        "src/lib/loginLimiter.ts",
+        "src/lib/loginLimiter.test.ts",
+        "src/app/api/auth/login/route.ts",
+        "src/app/api/_guard.ts",
+        "src/lib/auth.ts",
+        "src/lib/supabaseServer.ts",
+        "supabase/schema.sql",
+        ".env.example"
+      ],
+      "adapted": "가벼운 로그인: OAuth 허용 목록 대신 역할별 공용 비밀번호 셋(관리자·강사·열람) + HMAC 쿠키 30일. 서명 비밀이 비면 ADMIN_PASSWORD → 개발용 문자열로 물러선다(모듈의 ①·② 어느 쪽도 아님, notes). Supabase 요청은 3초 시간제한",
+      "skipped": [
+        {
+          "part": "상태 확인 /api/health",
+          "why": "Vercel 서버리스라 헬스체크·재시작을 연결할 곳이 없음 — keep-alive가 홈을 친다"
+        },
+        {
+          "part": "업로드 검사",
+          "why": "올리는 것은 관리자 JSON 가져오기(/api/seed)뿐, 관리자 로그인 뒤"
+        },
+        {
+          "part": "앱 안 로그·서버 오류 추적",
+          "why": "Vercel 런타임 로그로 봄, 오류 추적은 아직 필요 없음"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "서명 비밀이 비면 ADMIN_PASSWORD→개발용 문자열로 물러섬 — ①·② 어느 쪽도 아님 · loginLimiter.test.ts 7개 통과(4번 자유→잠금, 해제, DB 없을 때 메모리) · /api/health 없음(skipped) · 업로드 검사 n/a(관리자 JSON만)",
+        "result": "partial"
+      }
+    },
+    "repo": {
+      "since": "ef06575",
+      "files": [
+        "Makefile"
+      ],
+      "adapted": "help는 머리 주석 '#   make …' 목록을 grep(## 주석 방식 아님). check = lint + typecheck + test(+파서) + build로 CI와 같은 묶음. Makefile에 preview·deploy·env-push 운영 명령이 남아 있음(1인 저장소, 배포는 2026-11-01부터 Git 연결). 커밋 제목 영어는 이 브랜치 커밋부터, 이슈 트래커 없어 KEY 없음",
+      "skipped": [
+        {
+          "part": "docs/spec 두 층(spec.md·tasks.md·ADR)",
+          "why": "1인 저장소 — README의 How it works·Architecture와 docs/*-manual.md가 스펙 역할"
+        },
+        {
+          "part": "PR 템플릿·PR 규칙",
+          "why": "main에 직접 푸시하는 1인 저장소"
+        },
+        {
+          "part": "clean-worktrees",
+          "why": "worktree를 쓰지 않음"
+        },
+        {
+          "part": "build distDir 분리",
+          "why": "Next 16은 dev 산출물을 .next/dev에 따로 써서 겹치지 않음"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "make → 목록 나옴 · make -k check(lint+typecheck+test+파서+build) 통과, 기준선과 같음 · 한글 브랜치 없음 · 커밋 제목 영어는 붙인 커밋부터",
+        "result": "ok"
+      }
+    },
+    "seo": {
+      "since": "ef06575",
+      "files": [
+        "src/app/robots.ts",
+        "src/app/layout.tsx"
+      ],
+      "adapted": "비공개 도구 변형: robots.txt Disallow / + 모든 쪽 noindex",
+      "skipped": [
+        {
+          "part": "sitemap·canonical·hreflang·IndexNow",
+          "why": "로그인 뒤 학교 내부 도구라 색인할 쪽이 없음"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "운영 주소에는 아직 안 나감(브랜치, 합친 뒤 curl로 다시) · 로컬 build의 robots.txt = 'User-Agent: * / Disallow: /', 서버 번들에 robots{index:false,follow:false} · sitemap·canonical·IndexNow n/a(색인 대상 없음)",
+        "result": "partial"
+      }
+    },
+    "privacy": {
+      "file": "PRIVACY.md",
+      "since": "ef06575",
+      "files": [
+        "PRIVACY.md",
+        "README.md"
+      ],
+      "adapted": "한국어만(사용자가 국악고 교사·학생). 기기 앱 틀 대신 서버에 저장하는 서비스로 다시 씀 — 다루는 정보 표·처리하는 곳 표·학생 정보 절",
+      "skipped": [
+        {
+          "part": "영어판",
+          "why": "사용자가 모두 한국어"
+        },
+        {
+          "part": "기기 안 기록·새 버전 확인·선택적 통계 절",
+          "why": "해당 없음"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "사이트 꼬리 링크·/privacy 쪽은 제안 승인 대기 · 학교·운영자 역할 문장 사용자 확인 전 · PRIVACY.md 대괄호·🔀 없음 · 앱 소스 바깥 주소 없음 · SDK @supabase·@vercel/analytics 모두 처리자 표에 있음 · '저장하지 않' 문장은 비밀번호 1곳, 맞음 · README 개인정보 절 고침(로그인 필수 반영)",
+        "result": "partial"
+      }
+    },
+    "analytics": {
+      "since": "ef06575",
+      "files": [
+        "src/app/layout.tsx",
+        "package.json"
+      ],
+      "adapted": "Vercel Web Analytics(쿠키 없음, <Analytics />)만. Sentry·TelemetryDeck 없음",
+      "skipped": [
+        {
+          "part": "운영 도메인에서만 켜기(isAllowedHost)",
+          "why": "Vercel Analytics는 대시보드가 환경별로 나눔 — 미리보기가 섞이는지는 notes"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "미리보기 트래픽 섞임 확인 안 함 · 운영 /_vercel/insights/script.js 200인데 render_check는 막은 통계 요청 0개로 보고(주입 시점 문제 추정) · 소스에는 <Analytics />(@vercel/analytics)뿐, 방침 처리자 표에 있음",
+        "result": "partial"
+      }
+    },
+    "deploy-cloudflare": {
+      "since": "ef06575",
+      "files": [
+        "vercel.json",
+        "Makefile"
+      ],
+      "adapted": "Cloudflare 대신 Vercel 조각: Git 연결(main 푸시 = 프로덕션 자동 배포, 2026-11-01), 함수 지역 icn1, 옛 vercel.app → d-t-it.com 308, 환경 값은 make env-push/env-pull",
+      "skipped": [
+        {
+          "part": "Workers·wrangler·다운로드 넘김",
+          "why": "Vercel에 올림"
+        }
+      ],
+      "verified": {
+        "date": "2026-11-12",
+        "what": "Vercel 조각: vercel ls 최신 Production Ready(main 푸시로 자동 배포) · curl -sI 운영 주소 200 · wrangler·Builds·다운로드·영상 줄 n/a(Vercel)",
+        "result": "ok"
+      }
+    }
+  },
+  "not_attached": {
+    "mail": "보내는 메일이 없음 — 문의는 받기만(contact)",
+    "legal": "가입·결제 없음",
+    "pwa": "설치·푸시 필요 없음",
+    "release": "웹 서비스라 새 버전 알림이 없음",
+    "mac-build": "맥 앱이 아님"
+  },
+  "notes": [
+    "2026-11-12 server: 서명 비밀(ADMIN_SESSION_SECRET)이 비면 ADMIN_PASSWORD·개발용 문자열로 서명 — 모듈 원칙(① 시작 거부)과 다름. 운영엔 값이 있음, 바꿀지 사용자에게 물을 것",
+    "2026-11-12 privacy: '학생 정보에 관해' 절의 학교·운영자 역할은 사용자 확인 전 초안, Supabase 데이터 지역 미기재",
+    "2026-11-12 privacy: login_attempts는 성공 로그인이 없으면 행이 남음 — 오래된 행 정리 없음",
+    "2026-11-12 privacy: 사이트 꼬리 '개인정보 안내' 링크·/privacy 쪽은 제안 보드 50-proposal-20261112-privacy-A 승인 대기",
+    "2026-11-12 analytics: 미리보기(*.vercel.app) 방문이 통계에 섞이는지 확인 안 함"
+  ]
+}
