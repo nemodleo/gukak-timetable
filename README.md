@@ -221,15 +221,17 @@ make env-push    # push .env.local values to Vercel (strips inline comments)
 
 ## Privacy
 
-The rosters this app manages contain **minor students' names and full schedules**. Two
-things follow from that:
+The rosters this app manages contain **minor students' names and full schedules**, so:
 
+- **Nothing is shown without a login.** Every timetable page renders a login card for
+  anonymous visitors and every read API answers 401; students and parents use the read-only
+  `VIEWER_PASSWORD`. Wrong passwords are throttled per IP (see Roles).
 - The generated seed (`src/data/seed-2026.json`) is never committed — see the note above.
-- With Supabase wired up, RLS makes every table **public-read** and the student view needs
-  no login, so the whole timetable is world-readable at the deployed URL. That is a
-  deliberate "students can check their own slot" choice; if it is not right for your
-  deployment, add a gate or an unguessable URL before pointing production at real data, and
-  keep Vercel's Deployment Protection on until you have decided.
+- Search engines are told to stay out (`src/app/robots.ts` disallows everything and every
+  page carries `noindex`).
+- What is stored where, and who processes it (Vercel, Vercel Web Analytics, Supabase,
+  Cloudflare mail routing), is in [`PRIVACY.md`](PRIVACY.md) (Korean). Change it in the same
+  commit whenever a feature starts storing or sending something new.
 
 ---
 
