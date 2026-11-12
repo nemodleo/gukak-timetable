@@ -241,5 +241,6 @@
     "2026-11-12 privacy: login_attempts는 성공 로그인이 없으면 행이 남음 — 오래된 행 정리 없음",
     "2026-11-12 privacy: 사이트 꼬리 '개인정보 안내' 링크·/privacy 쪽은 제안 보드 50-proposal-20261112-privacy-A 승인 대기",
     "2026-11-12 analytics: 미리보기(*.vercel.app) 방문이 통계에 섞이는지 확인 안 함"
-  ]
+  ],
+  "servicekit_version": "ef06575"
 }
