@@ -86,7 +86,7 @@ export default async function RootLayout({
               </a>
             </span>
           </footer>
-          {/* 공지 — 모든 화면·모든 사람에게 먼저(닫기는 그 탭만, 오늘 하루 보지 않기는 그날까지) */}
+          {/* 공지 — 모든 화면·모든 사람에게 먼저(닫기는 그 쪽에서만, 오늘 하루 보지 않기는 그날까지) */}
           <NoticeDialog />
         </InactiveStyleProvider>
         <Analytics />

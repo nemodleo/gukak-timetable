@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { noticeHidden } from "@/lib/notice";
 import { todayKST } from "@/lib/schedule";
 
-const TAB_KEY = "gkt_notice_closed"; // sessionStorage: 이 탭에서 닫음
 const DAY_KEY = "gkt_notice_hidden_on"; // localStorage: "오늘 하루 보지 않기"를 누른 한국 날짜
 
 /* 숨김 여부는 브라우저 저장소가 원본 — useSyncExternalStore로 읽어 서버 렌더(숨김)와
@@ -32,41 +32,38 @@ function write(store: () => Storage, key: string, value: string) {
   }
   listeners.forEach((l) => l());
 }
-function readHidden(): boolean {
-  return noticeHidden({
-    closedThisTab: read(() => sessionStorage, TAB_KEY) === "1",
-    hiddenOn: read(() => localStorage, DAY_KEY),
-    today: todayKST(),
-  });
+function readHiddenOn(): string | null {
+  return read(() => localStorage, DAY_KEY);
 }
 
 /** 모든 화면에 먼저 뜨는 공지 모달(로그인 여부와 상관없이). 국악고 선생님이
  *  비밀번호·수정·운영 문의를 어디로 보낼지 바로 알 수 있게.
- *  닫기 = 그 탭에서만 숨김 · 오늘 하루 보지 않기 = 그 브라우저에서 한국 날짜로 오늘까지 숨김. */
+ *  닫기 = 지금 쪽에서만 숨김(다른 쪽으로 가면 다시) · 오늘 하루 보지 않기 = 그 브라우저에서 한국 날짜로 오늘까지 숨김. */
 export function NoticeDialog() {
-  const storedHidden = useSyncExternalStore(subscribe, readHidden, () => true);
-  const [closedHere, setClosedHere] = useState(false); // 저장소가 막혀도 닫히게
-  const open = !storedHidden && !closedHere;
+  const path = usePathname();
+  // 서버 렌더에선 "오늘 숨김"으로 두어(모달 없음) 하이드레이션 뒤에 뜬다
+  const hiddenOn = useSyncExternalStore(subscribe, readHiddenOn, () => todayKST());
+  const [closedOnPath, setClosedOnPath] = useState<string | null>(null);
+  const [hiddenToday, setHiddenToday] = useState(false); // 저장소가 막혀도 그날은 닫히게
+  const open =
+    !hiddenToday && !noticeHidden({ closedOnPath, path, hiddenOn, today: todayKST() });
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  const close = () => {
-    write(() => sessionStorage, TAB_KEY, "1");
-    setClosedHere(true);
-  };
+  const close = () => setClosedOnPath(path);
   const hideToday = () => {
     write(() => localStorage, DAY_KEY, todayKST());
-    setClosedHere(true);
+    setHiddenToday(true);
   };
 
   useEffect(() => {
     if (!open) return;
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") setClosedOnPath(path); // 지금 쪽에서 닫기(쪽이 바뀌면 새 경로로 다시 건다)
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, path]);
 
   if (!open) return null;
 
