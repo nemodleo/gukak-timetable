@@ -13,6 +13,7 @@ import {
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { InactiveStyleProvider } from "@/lib/inactiveStyleContext";
+import Link from "next/link";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
@@ -71,6 +72,9 @@ export default async function RootLayout({
             data-no-capture
           >
             <span>국립국악고등학교 강사·강의실 시간표</span>
+            <Link href="/privacy" className="underline decoration-clay underline-offset-4">
+              개인정보 안내
+            </Link>
             <span>
               문의{" "}
               <a

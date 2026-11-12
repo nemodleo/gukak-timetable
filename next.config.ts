@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   // files, since a dynamic property-indexed path isn't reliably traced.
   outputFileTracingIncludes: {
     "/docs/*": ["./docs/*.md"],
+    // /privacy reads the repo-root PRIVACY.md the same way
+    "/privacy": ["./PRIVACY.md"],
   },
 };
 
