@@ -147,6 +147,12 @@ body {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+/* /privacy: 링크 글자는 ink-2(대비 4.5 이상), 밑줄만 clay — 공지·꼬리 링크와 같은 모양 */
+.privacy-body a {
+  color: var(--color-ink-2);
+  text-decoration-color: var(--color-clay);
+  text-underline-offset: 4px;
+}
 .docs-body strong {
   color: var(--color-ink);
   font-weight: 600;

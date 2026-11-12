@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         </h1>
       </div>
       <article
-        className="docs-body max-w-[860px] break-keep [overflow-wrap:anywhere] [&_a]:text-ink-2 [&_a]:underline [&_a]:decoration-clay [&_a]:underline-offset-4"
+        className="docs-body privacy-body max-w-[860px] break-keep [overflow-wrap:anywhere]"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>
