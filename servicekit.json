@@ -170,7 +170,11 @@
       "since": "ef06575",
       "files": [
         "PRIVACY.md",
-        "README.md"
+        "README.md",
+        "src/app/privacy/page.tsx",
+        "src/app/layout.tsx",
+        ".vercelignore",
+        "next.config.ts"
       ],
       "adapted": "한국어만(사용자가 국악고 교사·학생). 기기 앱 틀 대신 서버에 저장하는 서비스로 다시 씀 — 다루는 정보 표·처리하는 곳 표·학생 정보 절",
       "skipped": [
@@ -185,7 +189,7 @@
       ],
       "verified": {
         "date": "2026-11-12",
-        "what": "사이트 꼬리 링크·/privacy 쪽은 제안 승인 대기 · 학교·운영자 역할 문장 사용자 확인 전 · PRIVACY.md 대괄호·🔀 없음 · 앱 소스 바깥 주소 없음 · SDK @supabase·@vercel/analytics 모두 처리자 표에 있음 · '저장하지 않' 문장은 비밀번호 1곳, 맞음 · README 개인정보 절 고침(로그인 필수 반영)",
+        "what": "학교·운영자 역할 문장은 사용자 확인 전 · /privacy 공개 쪽 200(로그인 없이), 모든 화면 꼬리에 '개인정보 안내' 링크 · 폰 render_check ✓(표는 목록으로 바꿈) · PRIVACY.md 대괄호·🔀 없음 · 바깥 주소 없음 · SDK 둘 다 처리자 표에 있음 · README 개인정보 절이 PRIVACY.md를 가리킴",
         "result": "partial"
       }
     },
@@ -239,8 +243,8 @@
     "2026-11-12 server: 서명 비밀(ADMIN_SESSION_SECRET)이 비면 ADMIN_PASSWORD·개발용 문자열로 서명 — 모듈 원칙(① 시작 거부)과 다름. 운영엔 값이 있음, 바꿀지 사용자에게 물을 것",
     "2026-11-12 privacy: '학생 정보에 관해' 절의 학교·운영자 역할은 사용자 확인 전 초안, Supabase 데이터 지역 미기재",
     "2026-11-12 privacy: login_attempts는 성공 로그인이 없으면 행이 남음 — 오래된 행 정리 없음",
-    "2026-11-12 privacy: 사이트 꼬리 '개인정보 안내' 링크·/privacy 쪽은 제안 보드 50-proposal-20261112-privacy-A 승인 대기",
-    "2026-11-12 analytics: 미리보기(*.vercel.app) 방문이 통계에 섞이는지 확인 안 함"
+    "2026-11-12 analytics: 미리보기(*.vercel.app) 방문이 통계에 섞이는지 확인 안 함",
+    "2026-11-12 design: 공용 PageHeader 라벨(.label-eyebrow 11px·ink-3, 대비 3.6)과 매뉴얼 링크(.docs-body a clay, 4.39)가 render_check 기준 미달 — /privacy만 고침, 앱 전체는 디자인 제안 뒤"
   ],
   "servicekit_version": "ef06575"
 }
