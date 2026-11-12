@@ -1,0 +1,51 @@
+/* 앱 토큰 미러 — src/app/globals.css @theme 와 같은 값. 앱 CSS를 바꾸면 이 파일도 같은 커밋에서. */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+  --font-serif: "Nanum Myeongjo", "AppleMyungjo", "Iowan Old Style", Georgia, serif;
+  --color-paper: #faf8f5;
+  --color-paper-2: #f3efe9;
+  --color-line: #e6e0d8;
+  --color-line-strong: #d8cfc3;
+  --color-ink: #1c1a17;
+  --color-ink-2: #514b43;
+  --color-ink-3: #8a8177;
+  --color-clay: #8a6f5c;
+  --color-clay-soft: #b79380;
+  --color-clay-wash: #efe7df;
+  --color-over: #b3261e;
+  --color-warn: #b07d1c;
+  /* 로그인 화면에는 안 쓰이지만 앱 토큰 한 벌을 그대로 비춘다 */
+  --color-g1-badge: #ffe599;
+  --color-g2-badge: #ea9999;
+  --color-g3-badge: #b6d7a8;
+  --color-gm-badge: #a4c2f4;
+  --color-current-week: #e9eefb;
+}
+html, body { margin: 0; background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; word-break: keep-all; overflow-wrap: anywhere; }
+a { color: inherit; }
+.hdr { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--color-line); background: rgba(250,248,245,.85); }
+.hdr .school { display: none; } @media (min-width: 640px) { .hdr .school { display: inline; } }
+.hdr .logo { font-family: var(--font-serif); font-size: 17px; font-weight: 500; letter-spacing: -0.01em; text-decoration: none; }
+.hdr nav { display: flex; align-items: center; gap: 2px; }
+.pill { border: 0; background: none; border-radius: 999px; padding: 6px 10px; font-size: 12px; color: var(--color-ink-2); font-family: inherit; }
+.pill.on { background: var(--color-ink); color: var(--color-paper); }
+.sep { width: 1px; height: 16px; background: var(--color-line); margin: 0 2px; }
+main { max-width: 1400px; margin: 0 auto; padding: 32px 16px 96px; }
+.card { max-width: 384px; margin: 0 auto; border: 1px solid var(--color-line); background: var(--color-paper); border-radius: 8px; padding: 32px 24px; }
+.card h1 { margin: 0; font-family: var(--font-serif); font-size: 20px; font-weight: 500; }
+.card p { margin: 0; }
+.lede { margin-top: 4px !important; font-size: 13px; line-height: 1.5; }
+.field { margin-top: 20px; }
+.field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--color-ink-2); margin-bottom: 6px; }
+.input { box-sizing: border-box; width: 100%; height: 38px; border: 1px solid var(--color-line-strong); border-radius: 6px; padding: 8px 12px; font-size: 14px; background: var(--color-paper); font-family: inherit; }
+.btn { box-sizing: border-box; width: 100%; height: 36px; margin-top: 12px; border: 0; border-radius: 6px; background: var(--color-ink); color: var(--color-paper); font-size: 14px; font-family: inherit; }
+.err { margin-top: 8px !important; font-size: 12px; color: var(--color-over); }
+.foot { margin-top: 16px !important; font-size: 13px; line-height: 1.5; }
+.mail { color: var(--color-ink-2); text-decoration: underline; text-decoration-color: var(--color-clay); text-underline-offset: 4px; }
+.banner { max-width: 384px; margin: 0 auto 16px; border: 1px solid var(--color-clay-soft); background: var(--color-clay-wash); border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.5; color: var(--color-ink-2); }
+.banner b { color: var(--color-ink); font-weight: 600; }
+.site-foot { max-width: 1400px; margin: 0 auto; padding: 16px; border-top: 1px solid var(--color-line); font-size: 13px; color: var(--color-ink-2); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.note { margin: 24px 16px 0; padding: 14px 16px; border: 1px dashed var(--color-line-strong); border-radius: 8px; font-size: 12px; line-height: 1.6; color: var(--color-ink-2); background: var(--color-paper-2); }
+.note h2 { margin: 0 0 6px; font-size: 12px; color: var(--color-ink); }
+.note ol { margin: 0; padding-left: 18px; }
+.states { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--color-line); }
