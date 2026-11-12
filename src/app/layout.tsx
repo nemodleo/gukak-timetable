@@ -18,6 +18,8 @@ import { CONTACT_EMAIL } from "@/lib/contact";
 export const metadata: Metadata = {
   title: "국악고 시간표",
   description: "국립국악고등학교 강사·강의실 시간표 및 통계",
+  // 학생 이름이 있는 내부 도구 — 검색 결과에 나오지 않게(robots.ts와 짝)
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
